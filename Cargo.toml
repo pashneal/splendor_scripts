@@ -1,6 +1,10 @@
 [package]
-name = "splendor"
-version = "0.0.0"
+name = "stourney"
+version = "0.0.1"
 edition = "2021"
+license = "MIT"
+keywords = ["splendor", "game", "tournament", "manager"]
+description = "Splendor tournament manager - an app for running Splendor tournaments between autonomous agents"
+readme = "README.md"
 
 [dependencies]
