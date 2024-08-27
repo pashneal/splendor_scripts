@@ -1,6 +1,22 @@
 # splendor_scripts
 Scripting utilities to facilitate setup and launch of Splendor AI competition on client devices
 
+## Coming Soon
+
+- [x] Add support for creating new projects
+- [ ] Add support for running projects against each other
+- [ ] Add support for saving configurations and editing them
+
+## Creating a new project
+
+To create a new project, run the following command:
+
+```bash
+cargo install stourney
+stourney new <project_name>
+```
+
+Which will initialize a project in the given directory
 
 ## Disclaimer
 
