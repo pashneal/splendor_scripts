@@ -4,6 +4,7 @@ use clap::{Parser, Subcommand};
 use log::*;
 use std::fs;
 use std::path::Path;
+use stourney::dialogue;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -20,6 +21,7 @@ enum MainCommands {
     /// Setup a new project in the specified directory
     New { directory: String },
 }
+
 
 pub fn main() {
     let args = Cli::parse();
@@ -42,12 +44,16 @@ pub fn main() {
                     // check if it is empty
                     let dir_contents = fs::read_dir(&directory).expect("[-] Failed to read directory contents");
                     if dir_contents.count() > 0 {
-                        error!("[-] Directory is not empty, exiting...");
-                        return;
+                        if dialogue::confirm_delete() {
+                            fs::remove_dir_all(&directory).expect("[-] Failed to remove directory");
+                        } else {
+                            return;
+                        }
                     }
 
                     // If the directory is empty, create the project
                     create_project(&directory);
+                    return
                 } else {
                     error!("[-] File exists but is not a directory, cannot overwrite it, exiting...");
                     return;

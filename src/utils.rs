@@ -1,7 +1,9 @@
 use std::process::Command;
 use std::path::Path;
 use log::{warn, error, info, trace};
+use std::{fs, io};
 use crate::constants::*;
+use crate::dialogue;
 
 /// Checks to see if git exists and is callable on this system
 /// This function is required to be os agnostic
@@ -219,9 +221,32 @@ pub fn clone_repo( subdirectory : &str, repo_url : &str ) {
     info!("[+] Repository cloned successfully!");
 }
 
+
+fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
+    fs::create_dir_all(&dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        } else {
+            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+
+/// Copy example file to the specified directory
+pub fn copy_example( example : &Path, directory : &str ) {
+    let source_dir = Path::new(&directory).join("lib").join(example);
+    copy_dir_all(&source_dir, directory).expect("[-] Failed to copy example directory");
+}
+
 /// Creates a new project in the specified empty directory
 /// - Initializes the stourney arena repository
 /// - Initializes the python virtual environment needed for the project
+/// - Initializes project template with given parameters
+/// TODO: clean up .git?
 /// TODO: error handling
 pub fn create_project( directory : &str ) {
     let arena_lib = Path::new(&directory).join("lib");
@@ -229,7 +254,15 @@ pub fn create_project( directory : &str ) {
     let venv_dir = Path::new(&directory).join("venv");
     let venv_dir = venv_dir.to_str().unwrap();
 
+    let example = if dialogue::language() == "Python" {
+        dialogue::python_template()
+    } else {
+        dialogue::rust_template()
+    };
+
+
     clone_repo(&arena_lib, STOURNEY_ARENA_REPO_URL);
+    copy_example(&example, &directory);
     setup_venv(venv_dir);
     //TODO: have a config file that specifies the python interpreter
 }
