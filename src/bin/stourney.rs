@@ -22,6 +22,39 @@ enum MainCommands {
     New { directory: String },
 }
 
+fn new_command(directory : &str) {
+        println!("[+] Creating a new project...");
+        trace!("[+] Launched the new subcommand");
+        if !prereqs_found() {
+            println!("[-] Prerequisites not met, exiting...");
+            return;
+        }
+
+        if !Path::new(&directory).exists() {
+            // If the path does not exist, create the empty directory
+            fs::create_dir(&directory).expect("[-] Failed to create directory");
+        }
+
+        if Path::new(&directory).is_dir() {
+            // If the path exists and it is a directory,
+            // check if it is empty
+            let dir_contents = fs::read_dir(&directory).expect("[-] Failed to read directory contents");
+            if dir_contents.count() > 0 {
+                if dialogue::confirm_delete() {
+                    fs::remove_dir_all(&directory).expect("[-] Failed to remove directory");
+                } else {
+                    return;
+                }
+            }
+
+            // If the directory is empty, create the project
+        } else {
+            error!("[-] File exists but is not a directory, cannot overwrite it, exiting...");
+            return;
+        }
+        create_project(&directory);
+        println!("[+] Project created successfully!");
+}
 
 pub fn main() {
     let args = Cli::parse();
@@ -31,39 +64,7 @@ pub fn main() {
     
     match args.command {
         Some(MainCommands::New { directory }) => {
-            println!("[+] Creating a new project...");
-            trace!("[+] Launched the new subcommand");
-            if !prereqs_found() {
-                println!("[-] Prerequisites not met, exiting...");
-                return;
-            }
-
-            if Path::new(&directory).exists() {
-                if Path::new(&directory).is_dir() {
-                    // If the path exists and it is a directory,
-                    // check if it is empty
-                    let dir_contents = fs::read_dir(&directory).expect("[-] Failed to read directory contents");
-                    if dir_contents.count() > 0 {
-                        if dialogue::confirm_delete() {
-                            fs::remove_dir_all(&directory).expect("[-] Failed to remove directory");
-                        } else {
-                            return;
-                        }
-                    }
-
-                    // If the directory is empty, create the project
-                    create_project(&directory);
-                    return
-                } else {
-                    error!("[-] File exists but is not a directory, cannot overwrite it, exiting...");
-                    return;
-                }
-            } else {
-                // If the path does not exist, create the empty directory
-                fs::create_dir(&directory).expect("[-] Failed to create directory");
-            }
-            create_project(&directory);
-            println!("[+] Project created successfully!");
+            new_command(&directory);
         }
 
         None => {
