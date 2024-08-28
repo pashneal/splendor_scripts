@@ -45,5 +45,5 @@ pub fn new_command(directory : &str) {
     println!("[+] Project created successfully!");
 }
 
-pub fn configure_command(directory : Option<impl AsRef<str>>) {
+pub fn configure_command() {
 }

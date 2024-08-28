@@ -3,6 +3,7 @@ use std::path::Path;
 use log::{warn, error, info, trace};
 use std::{fs, io};
 use crate::constants::*;
+use crate::config;
 use crate::dialogue;
 
 /// Checks to see if git exists and is callable on this system
@@ -264,5 +265,4 @@ pub fn create_project( directory : &str ) {
     clone_repo(&arena_lib, STOURNEY_ARENA_REPO_URL);
     copy_example(&example, &directory);
     setup_venv(venv_dir);
-    //TODO: have a config file that specifies the python interpreter
 }
