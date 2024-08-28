@@ -20,6 +20,8 @@ struct Cli {
 enum MainCommands {
     /// Setup a new project in the specified directory
     New { directory: String },
+    /// Determine the current version of the stourney binary
+    Version,
 }
 
 fn new_command(directory : &str) {
@@ -65,6 +67,10 @@ pub fn main() {
     match args.command {
         Some(MainCommands::New { directory }) => {
             new_command(&directory);
+        }
+
+        Some (MainCommands::Version) => {
+            println!("stourney v{}", stourney::constants::VERSION);
         }
 
         None => {
