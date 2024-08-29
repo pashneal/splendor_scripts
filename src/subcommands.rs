@@ -4,6 +4,7 @@ use std::fs;
 use std::path::Path;
 use crate::dialogue;
 use crate::constants;
+use crate::config;
 
 /// Prints the version of the stourney binary
 pub fn version_command() {
@@ -44,10 +45,38 @@ pub fn new_command(directory : &str) {
 
     if utils::create_project(&directory) {
         println!("[+] Project created successfully!");
+        config::add_to_recents(&directory);
     } else {
         error!("[-] Failed to create project");
     }
 }
 
 pub fn configure_command() {
+    let mut num_competitors = dialogue::num_competitors();
+    let mut competitors = Vec::new();
+
+    while num_competitors > 0 {
+        if let Some(competitor) = dialogue::select_recent_project(competitors.len()) {
+            competitors.push(competitor);
+            num_competitors -= 1;
+        }
+    }
+
+    let mut cfg = config::get_config();
+    cfg.selected_projects = competitors.clone();
+    config::save_config(cfg);
+
+    println!("");
+    println!("[+] Configuration saved successfully!");
+    println!("[+] Competitors:");
+    for competitor in competitors {
+        println!("  - {}", competitor);
+    }
+    println!("[+] To run the project, try: \n\tstourney run");
+}
+
+pub fn run_command() {
+    // Run the tournament by going into any of the directories
+    // using the venv installed in the directory and run_game in the scaffolding
+    // for now - eventually, we'll want to move to just calling the binaries directly
 }

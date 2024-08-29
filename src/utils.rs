@@ -280,8 +280,63 @@ pub fn create_project( directory : &str ) -> bool {
     };
 
 
+    println!("[+] Downloading and installing...");
     if !clone_repo(&arena_lib, STOURNEY_ARENA_REPO_URL) { return false; }
     if !copy_example(&example, &directory) { return false; }
     if !setup_venv(venv_dir) { return false; }  
     true
 }
+
+/// Check whether the given directory is likely to have 
+/// been created by the command:
+///
+/// ```no_run
+/// stourney new <directory>
+/// ```
+pub fn check_project(directory : &str) -> bool {
+    if !Path::new(directory).exists() { 
+        error!("[-] File {} could not be found", directory);
+        return false; 
+    }
+    if !Path::new(directory).is_dir() { 
+        error!("[-] Path {} is not a directory", directory);
+        return false; 
+    }
+    if !Path::new(directory).join("lib").exists() { 
+        error!("[-] Directory {} does not contain a lib directory", directory);
+        return false; 
+    }
+    if !Path::new(directory).join("lib").is_dir() { 
+        error!("[-] Directory {} does not contain a lib directory", directory);
+        return false; 
+    }
+    if !Path::new(directory).join("venv").exists() { 
+        error!("[-] Directory {} does not contain a venv directory", directory);
+        return false; 
+    }
+    if !Path::new(directory).join("venv").is_dir() { 
+        error!("[-] Directory {} does not contain a venv directory", directory);
+        return false; 
+    }
+    if (!Path::new(directory).join("bot.py").exists()) &&
+       (!Path::new(directory).join("Cargo.toml").exists())
+    {
+        error!("[-] Directory {} is invalid", directory);
+        error!("[-] Expected a Cargo.toml or bot.py file");
+        return false;
+    }
+    return true;
+}
+
+
+/// Convert a relative path to a full path 
+pub fn relative_to_full_path( relative_path : &str ) -> String {
+    let full_path = Path::new(relative_path).canonicalize().unwrap();
+    full_path.to_str().unwrap().to_string()
+}
+
+/// Convert a full path to a relative path
+pub fn full_to_relative_path( full_path : &str ) -> String {
+    todo!()
+}
+

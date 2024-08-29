@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use crate::constants;
-use std::path::Path;
+use crate::utils;
 
 #[derive(Serialize, Deserialize)]
 /// `ProjectConfig` is a struct that holds the configuration for a project
@@ -17,7 +17,9 @@ pub struct ProjectConfig {
     #[serde(default)]
     pub interpreter: String,
     #[serde(default)]
-    pub selected_projects: Vec<String>
+    pub selected_projects: Vec<String>,
+    #[serde(default)]
+    pub recents: Vec<String>
 }
 
 impl ::std::default::Default for ProjectConfig {
@@ -25,7 +27,8 @@ impl ::std::default::Default for ProjectConfig {
         version: constants::VERSION.to_owned(), 
         api_key: "".into(),
         interpreter: "./venv/bin/python3".into(),
-        selected_projects: Vec::new()
+        selected_projects: Vec::new(),
+        recents: Vec::new()
     } }
 }
 
@@ -36,15 +39,39 @@ pub fn init_config(){
     stored.expect("[-] Failed to create config file");
 }
 
-/// Gets the config file from the specified directory,
-/// or creates a new default one if it does not exist
+/// Gets the config file from the specified directory
+/// or returns the default config file if it does not exist yet
 pub fn get_config() -> ProjectConfig {
     let cfg = confy::load(constants::CONF_FILE_NAME, None);
     let cfg = cfg.expect("[-] Failed to load config file");
     cfg 
 }
 
+/// Saves the config file
+pub fn save_config(cfg: ProjectConfig) {
+    let stored = confy::store(constants::CONF_FILE_NAME, None, cfg);
+    stored.expect("[-] Failed to save config file");
+}
+
+
+/// Returns true if the latest version of the config file is being used
 pub fn correct_version() -> bool {
     let cfg = get_config();
     cfg.version == constants::VERSION 
+}
+
+
+/// Adds a valid directory to the recents list in the config file
+pub fn add_to_recents(directory: &str) {
+    let directory = utils::relative_to_full_path(directory);
+    let mut cfg = get_config();
+    if cfg.recents.contains(&directory.to_owned()) {
+        let index = cfg.recents.iter().position(|x| *x == directory).unwrap();
+        cfg.recents.remove(index);
+    }
+
+    let mut recents = cfg.recents.clone();
+    recents.insert(0, directory.to_owned());
+    cfg.recents = recents;
+    save_config(cfg);
 }

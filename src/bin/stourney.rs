@@ -1,7 +1,6 @@
 use clap_verbosity_flag::{Verbosity, WarnLevel};
 use clap::{Parser, Subcommand};
 use stourney::{subcommands, config};
-use log::*;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
