@@ -186,10 +186,9 @@ pub fn prereqs_found() -> bool {
     return true;
 }
 
-
 /// Setup a new python virtual environment in the specified directory
 #[cfg(target_os = "linux")]
-pub fn setup_venv( directory : &str ) {
+pub fn setup_venv( directory : &str ) -> bool {
     let command_result = Command::new("python3")
         .arg("-m")
         .arg("venv")
@@ -197,9 +196,21 @@ pub fn setup_venv( directory : &str ) {
         .output();
     if !command_result.is_ok() {
         error!("[-] Failed to create virtual environment in {}", directory);
-        return;
+        return false;
     }
     info!("[+] Virtual environment created successfully!");
+
+    // Also install maturin and maturin[patchelf]
+    let command_result = Command::new(directory.to_string() + "/bin/pip")
+        .arg("install")
+        .arg("maturin[patchelf]")
+        .output();
+    if !command_result.is_ok() {
+        error!("[-] Failed to install maturin[patchelf]");
+        return false;
+    }
+    info!("[+] maturin[patchelf] installed successfully!");
+    true
 }
 
 /// Setup a new python virtual environment in the specified directory
@@ -209,38 +220,46 @@ pub fn setup_venv( directory : &str ) {
 }
 
 /// Clones a repository to a specified subdirectory
-pub fn clone_repo( subdirectory : &str, repo_url : &str ) {
+/// Returns true if the operation was successful
+pub fn clone_repo( subdirectory : &str, repo_url : &str ) -> bool {
     let command_result = Command::new("git")
         .arg("clone")
         .arg(repo_url)
         .arg(subdirectory)
         .output();
-    if !command_result.is_ok() {
+    if command_result.is_err() {
         error!("[-] Failed to clone repository to {}", subdirectory);
-        return;
+        return false;
     }
     info!("[+] Repository cloned successfully!");
+    true
 }
 
 
-fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
-    fs::create_dir_all(&dst)?;
-    for entry in fs::read_dir(src)? {
+/// Copy all of a given directories contents to a new location
+fn copy_dir_all(source: impl AsRef<Path>, destination: impl AsRef<Path>) -> io::Result<()> {
+    fs::create_dir_all(&destination)?;
+    for entry in fs::read_dir(source)? {
         let entry = entry?;
         let ty = entry.file_type()?;
         if ty.is_dir() {
-            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
+            copy_dir_all(entry.path(), destination.as_ref().join(entry.file_name()))?;
         } else {
-            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+            fs::copy(entry.path(), destination.as_ref().join(entry.file_name()))?;
         }
     }
     Ok(())
 }
 
 /// Copy example file to the specified directory
-pub fn copy_example( example : &Path, directory : &str ) {
+/// Returns true if the operation was successful
+pub fn copy_example( example : &Path, directory : &str ) -> bool {
     let source_dir = Path::new(&directory).join("lib").join(example);
-    copy_dir_all(&source_dir, directory).expect("[-] Failed to copy example directory");
+    if copy_dir_all(&source_dir, directory).is_err() {
+        error!("[-] Failed to copy example directory");
+        return false
+    }
+    true
 }
 
 /// Creates a new project in the specified empty directory
@@ -248,8 +267,7 @@ pub fn copy_example( example : &Path, directory : &str ) {
 /// - Initializes the python virtual environment needed for the project
 /// - Initializes project template with given parameters
 /// TODO: clean up .git?
-/// TODO: error handling
-pub fn create_project( directory : &str ) {
+pub fn create_project( directory : &str ) -> bool {
     let arena_lib = Path::new(&directory).join("lib");
     let arena_lib = arena_lib.to_str().unwrap();
     let venv_dir = Path::new(&directory).join("venv");
@@ -262,7 +280,8 @@ pub fn create_project( directory : &str ) {
     };
 
 
-    clone_repo(&arena_lib, STOURNEY_ARENA_REPO_URL);
-    copy_example(&example, &directory);
-    setup_venv(venv_dir);
+    if !clone_repo(&arena_lib, STOURNEY_ARENA_REPO_URL) { return false; }
+    if !copy_example(&example, &directory) { return false; }
+    if !setup_venv(venv_dir) { return false; }  
+    true
 }

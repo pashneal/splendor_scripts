@@ -41,8 +41,12 @@ pub fn new_command(directory : &str) {
         error!("[-] File exists but is not a directory, cannot overwrite it, exiting...");
         return;
     }
-    utils::create_project(&directory);
-    println!("[+] Project created successfully!");
+
+    if utils::create_project(&directory) {
+        println!("[+] Project created successfully!");
+    } else {
+        error!("[-] Failed to create project");
+    }
 }
 
 pub fn configure_command() {
