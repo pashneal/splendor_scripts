@@ -36,6 +36,7 @@ impl ::std::default::Default for ProjectConfig {
 pub fn init_config(){
     let cfg = get_config();
     let stored = confy::store(constants::CONF_FILE_NAME, None, cfg);
+    purge_recents();
     stored.expect("[-] Failed to create config file");
 }
 
@@ -60,6 +61,14 @@ pub fn correct_version() -> bool {
     cfg.version == constants::VERSION 
 }
 
+/// Purges the invalid directories from the recents list in the config file
+pub fn purge_recents() {
+    let mut cfg = get_config();
+    let mut recents = cfg.recents.clone();
+    recents.retain(|x| utils::check_project(x, false));
+    cfg.recents = recents;
+    save_config(cfg);
+}
 
 /// Adds a valid directory to the recents list in the config file
 pub fn add_to_recents(directory: &str) {
@@ -74,4 +83,5 @@ pub fn add_to_recents(directory: &str) {
     recents.insert(0, directory.to_owned());
     cfg.recents = recents;
     save_config(cfg);
+    purge_recents();
 }

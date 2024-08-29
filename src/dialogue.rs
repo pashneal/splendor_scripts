@@ -136,7 +136,7 @@ pub fn select_recent_project(competitor_num: usize) -> Option<String> {
         selections[selection].clone()
     };
 
-    if utils::check_project(&directory) {
+    if utils::check_project(&directory, true) {
         config::add_to_recents(&directory);
         Some(directory)
     } else {

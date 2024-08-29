@@ -3,7 +3,6 @@ use std::path::Path;
 use log::{warn, error, info, trace};
 use std::{fs, io};
 use crate::constants::*;
-use crate::config;
 use crate::dialogue;
 
 /// Checks to see if git exists and is callable on this system
@@ -293,36 +292,50 @@ pub fn create_project( directory : &str ) -> bool {
 /// ```no_run
 /// stourney new <directory>
 /// ```
-pub fn check_project(directory : &str) -> bool {
+pub fn check_project(directory : &str, verbose: bool) -> bool {
     if !Path::new(directory).exists() { 
-        error!("[-] File {} could not be found", directory);
+        if verbose {
+            error!("[-] Directory {} does not exist", directory);
+        }
         return false; 
     }
     if !Path::new(directory).is_dir() { 
-        error!("[-] Path {} is not a directory", directory);
+        if verbose {
+            error!("[-] Path {} is not a directory", directory);
+        }
         return false; 
     }
     if !Path::new(directory).join("lib").exists() { 
-        error!("[-] Directory {} does not contain a lib directory", directory);
+        if verbose {
+            error!("[-] Directory {} does not contain a lib directory", directory);
+        }
         return false; 
     }
     if !Path::new(directory).join("lib").is_dir() { 
+        if verbose {
         error!("[-] Directory {} does not contain a lib directory", directory);
+        }
         return false; 
     }
     if !Path::new(directory).join("venv").exists() { 
+        if verbose {
         error!("[-] Directory {} does not contain a venv directory", directory);
+        }
         return false; 
     }
     if !Path::new(directory).join("venv").is_dir() { 
-        error!("[-] Directory {} does not contain a venv directory", directory);
+        if verbose {
+            error!("[-] Directory {} does not contain a venv directory", directory);
+        }
         return false; 
     }
     if (!Path::new(directory).join("bot.py").exists()) &&
        (!Path::new(directory).join("Cargo.toml").exists())
     {
-        error!("[-] Directory {} is invalid", directory);
-        error!("[-] Expected a Cargo.toml or bot.py file");
+        if verbose {
+            error!("[-] Directory {} is invalid", directory);
+            error!("[-] Expected a Cargo.toml or bot.py file");
+        }
         return false;
     }
     return true;
@@ -336,7 +349,7 @@ pub fn relative_to_full_path( relative_path : &str ) -> String {
 }
 
 /// Convert a full path to a relative path
-pub fn full_to_relative_path( full_path : &str ) -> String {
+pub fn full_to_relative_path( _full_path : &str ) -> String {
     todo!()
 }
 
