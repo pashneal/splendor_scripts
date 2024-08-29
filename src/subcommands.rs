@@ -68,15 +68,13 @@ pub fn configure_command() {
 
     println!("");
     println!("[+] Configuration saved successfully!");
-    println!("[+] Competitors:");
-    for competitor in competitors {
-        println!("  - {}", competitor);
-    }
+    config::print_competitors();
     println!("[+] To run the project, try: \n\tstourney run");
 }
 
+pub fn show_competitors() {
+    config::print_competitors();
+}
+
 pub fn run_command() {
-    // Run the tournament by going into any of the directories
-    // using the venv installed in the directory and run_game in the scaffolding
-    // for now - eventually, we'll want to move to just calling the binaries directly
 }

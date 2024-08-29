@@ -85,3 +85,16 @@ pub fn add_to_recents(directory: &str) {
     save_config(cfg);
     purge_recents();
 }
+
+pub fn print_competitors() {
+    let cfg = get_config();
+    println!("[+] Competitors:");
+    if cfg.selected_projects.is_empty() {
+        println!("No competitors selected yet!");
+        println!("try running \n\tstourney config edit\nto add some competitors.");
+    }
+    for competitor in cfg.selected_projects {
+        println!("  - {}", competitor);
+    }
+}
+

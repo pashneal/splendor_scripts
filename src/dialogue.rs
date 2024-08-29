@@ -137,8 +137,9 @@ pub fn select_recent_project(competitor_num: usize) -> Option<String> {
     };
 
     if utils::check_project(&directory, true) {
-        config::add_to_recents(&directory);
-        Some(directory)
+        let full_path = utils::relative_to_full_path(&directory);
+        config::add_to_recents(&full_path);
+        Some(full_path)
     } else {
         error!("[-] Invalid project directory");
         None

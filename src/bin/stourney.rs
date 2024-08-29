@@ -1,5 +1,5 @@
 use clap_verbosity_flag::{Verbosity, WarnLevel};
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, Args};
 use stourney::{subcommands, config};
 
 #[derive(Parser)]
@@ -19,9 +19,21 @@ enum MainCommands {
     /// Determine the current version of the stourney binary
     Version,
     /// Configure the stourney binary
-    Config 
+    Config(ConfigArgs),
 }
 
+#[derive(Args)]
+#[command(args_conflicts_with_subcommands = true)]
+struct ConfigArgs {
+    #[command(subcommand)]
+    command : Option<ConfigCommands>,
+}
+
+#[derive(Subcommand)]
+pub enum ConfigCommands {
+    Edit,
+    Show,
+}
 
 pub fn main() {
     let args = Cli::parse();
@@ -40,8 +52,20 @@ pub fn main() {
             subcommands::version_command();
         }
 
-        Some(MainCommands::Config) => {
-            subcommands::configure_command();
+        Some(MainCommands::Config(args)) => {
+            if args.command.is_none() {
+                subcommands::show_competitors();
+                return; 
+            }
+            let command = args.command.unwrap();
+            match command {
+                ConfigCommands::Edit => {
+                    subcommands::configure_command();
+                }
+                ConfigCommands::Show => {
+                    subcommands::show_competitors();
+                }
+            }
         }
 
         None => {
