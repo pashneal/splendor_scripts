@@ -20,6 +20,9 @@ enum MainCommands {
     Version,
     /// Configure the stourney binary
     Config(ConfigArgs),
+    /// Run a competition
+    Run,
+
 }
 
 #[derive(Args)]
@@ -31,7 +34,9 @@ struct ConfigArgs {
 
 #[derive(Subcommand)]
 pub enum ConfigCommands {
+    /// Edit the current configuration
     Edit,
+    /// Show the current configuration
     Show,
 }
 
@@ -66,6 +71,10 @@ pub fn main() {
                     subcommands::show_competitors();
                 }
             }
+        }
+
+        Some(MainCommands::Run) => {
+            subcommands::run_command();
         }
 
         None => {

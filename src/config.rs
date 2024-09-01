@@ -86,7 +86,7 @@ pub fn add_to_recents(directory: &str) {
     purge_recents();
 }
 
-pub fn print_competitors() {
+pub fn display_competitors() {
     let cfg = get_config();
     println!("[+] Competitors:");
     if cfg.selected_projects.is_empty() {

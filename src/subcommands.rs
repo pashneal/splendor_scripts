@@ -68,12 +68,12 @@ pub fn configure_command() {
 
     println!("");
     println!("[+] Configuration saved successfully!");
-    config::print_competitors();
+    config::display_competitors();
     println!("[+] To run the project, try: \n\tstourney run");
 }
 
 pub fn show_competitors() {
-    config::print_competitors();
+    config::display_competitors();
 }
 
 pub fn run_command() {

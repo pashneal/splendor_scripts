@@ -261,15 +261,75 @@ pub fn copy_example( example : &Path, directory : &str ) -> bool {
     true
 }
 
+/// Builds a maturin project in the partially initialized project directory
+/// so that FFI bindings for python can be installed to the python
+/// virtual environment
+fn maturin_build( directory : &str) {
+    // TODO: simple error handling 
+
+    let old_path = std::env::var("PATH").expect("[-] Failed to get PATH variable");
+
+    let virtual_env_binaries = Path::new(directory).join("venv").join("bin");
+    let virtual_env_binaries = virtual_env_binaries.to_str().unwrap();
+    let virtual_env_binaries = relative_to_full_path(virtual_env_binaries);
+
+    // We need to add the virtual environment binaries to the path
+    // because maturin requires `bin/patchelf` to be in the path
+    let new_path = format!("{}:{}", old_path, virtual_env_binaries);
+
+    let ffi_cargo_toml = Path::new(directory).join("lib").join("scaffolding").join("python_ffi").join("Cargo.toml").canonicalize().unwrap();
+    let ffi_cargo_toml = ffi_cargo_toml.to_str().unwrap();
+
+    let a = Command::new("maturin")
+        .arg("build")
+        .arg("--release")
+        .arg("--manifest-path")
+        .arg(ffi_cargo_toml)
+        .arg("--out")
+        .arg(&virtual_env_binaries)
+        .current_dir(directory)
+        .env("PATH", new_path)
+        .spawn();
+
+    a.expect("[-] Failed to build maturin project")
+        .wait()
+        .expect("[-] Failed to wait for maturin project to build");
+
+    info!("[+] Maturin project built successfully!");
+
+    // Walk the contents of the bin directory for a .whl file
+    let whl_file = fs::read_dir(&virtual_env_binaries).expect("[-] Failed to read directory contents")
+        .filter_map(|entry| entry.ok())
+        .find(|entry| entry.path().extension().map_or(false, |ext| ext == "whl"))
+        .expect("[-] Failed to find .whl file");
+
+    let interpreter = Path::new(directory).join("venv").join("bin").join("python3");
+    let interpreter = interpreter.to_str().unwrap();
+    let interpreter = relative_to_full_path(interpreter);
+
+    trace!("Found whl file: {:?}", whl_file.path());
+
+    let _ = Command::new(&interpreter)
+        .arg("-m")
+        .arg("pip")
+        .arg("install")
+        .arg(whl_file.path())
+        .output()
+        .expect("[-] Failed to install wheel file");
+
+    info!("[+] Wheel file installed successfully!");
+    
+}
+
 /// Creates a new project in the specified empty directory
 /// - Initializes the stourney arena repository
 /// - Initializes the python virtual environment needed for the project
 /// - Initializes project template with given parameters
 /// TODO: clean up .git?
-pub fn create_project( directory : &str ) -> bool {
-    let arena_lib = Path::new(&directory).join("lib");
+pub fn create_project( project_directory : &str ) -> bool {
+    let arena_lib = Path::new(&project_directory).join("lib");
     let arena_lib = arena_lib.to_str().unwrap();
-    let venv_dir = Path::new(&directory).join("venv");
+    let venv_dir = Path::new(&project_directory).join("venv");
     let venv_dir = venv_dir.to_str().unwrap();
 
     let example = if dialogue::language() == "Python" {
@@ -281,10 +341,12 @@ pub fn create_project( directory : &str ) -> bool {
 
     println!("[+] Downloading and installing...");
     if !clone_repo(&arena_lib, STOURNEY_ARENA_REPO_URL) { return false; }
-    if !copy_example(&example, &directory) { return false; }
+    if !copy_example(&example, &project_directory) { return false; }
     if !setup_venv(venv_dir) { return false; }  
+    maturin_build(&project_directory);
     true
 }
+
 
 /// Check whether the given directory is likely to have 
 /// been created by the command:
@@ -329,9 +391,7 @@ pub fn check_project(directory : &str, verbose: bool) -> bool {
         }
         return false; 
     }
-    if (!Path::new(directory).join("bot.py").exists()) &&
-       (!Path::new(directory).join("Cargo.toml").exists())
-    {
+    if  matches!(guess_project_type(directory), ProjectType::Unknown) {
         if verbose {
             error!("[-] Directory {} is invalid", directory);
             error!("[-] Expected a Cargo.toml or bot.py file");
@@ -353,3 +413,19 @@ pub fn full_to_relative_path( _full_path : &str ) -> String {
     todo!()
 }
 
+pub enum ProjectType {
+    Python,
+    Rust,
+    Unknown
+}
+
+/// Guess the project type based on the contents of the directory
+pub fn guess_project_type( directory : &str ) -> ProjectType {
+    if Path::new(directory).join("bot.py").exists() {
+        return ProjectType::Python;
+    }
+    if Path::new(directory).join("Cargo.toml").exists() {
+        return ProjectType::Rust;
+    }
+    ProjectType::Unknown
+}
