@@ -295,7 +295,6 @@ fn maturin_build( directory : &str) {
     // TODO: simple error handling 
 
     let old_path = std::env::var("PATH").expect("[-] Failed to get PATH variable");
-
     
     let virtual_env_binaries = if cfg!(target_os = "windows") {
         Path::new(directory).join("venv").join("Scripts")
@@ -307,10 +306,14 @@ fn maturin_build( directory : &str) {
 
     // We need to add the virtual environment binaries to the path
     // because maturin requires `bin/patchelf` to be in the path
-    let new_path = format!("{}:{}", old_path, virtual_env_binaries);
+    let new_path = format!("{};{}", old_path, virtual_env_binaries);
 
     let ffi_cargo_toml = Path::new(directory).join("lib").join("scaffolding").join("python_ffi").join("Cargo.toml").canonicalize().unwrap();
-    let ffi_cargo_toml = ffi_cargo_toml.to_str().unwrap();
+    let mut ffi_cargo_toml = ffi_cargo_toml.to_str().unwrap();
+    if cfg!(target_os = "windows") && ffi_cargo_toml.starts_with("\\\\?\\") {
+        //strip out \\?\ string for canonical
+        ffi_cargo_toml = &ffi_cargo_toml[4..];
+    }
 
     let a = Command::new("maturin")
         .arg("build")
@@ -319,8 +322,9 @@ fn maturin_build( directory : &str) {
         .arg(ffi_cargo_toml)
         .arg("--out")
         .arg(&virtual_env_binaries)
-        .current_dir(directory)
-        .env("PATH", new_path)
+        .arg("--interpreter")
+        .arg("./python")
+        .current_dir(&virtual_env_binaries)
         .spawn();
 
     a.expect("[-] Failed to build maturin project")
@@ -339,12 +343,17 @@ fn maturin_build( directory : &str) {
     info!("[+] Interpreter: {}", interpreter);
 
     trace!("Found whl file: {:?}", whl_file.path());
+    let whl_file = whl_file.path();
+    let mut whl_file = whl_file.to_str().unwrap();
+    if cfg!(target_os = "windows") && whl_file.starts_with("\\\\?\\") {
+        whl_file = &whl_file[4..];
+    }
 
     let command = Command::new(&interpreter)
         .arg("-m")
         .arg("pip")
         .arg("install")
-        .arg(whl_file.path())
+        .arg(&whl_file)
         .arg("--force-reinstall")
         .spawn();
     command.expect("[-] Failed to install wheel file")
@@ -440,7 +449,11 @@ pub fn check_project(directory : &str, verbose: bool) -> bool {
 /// Convert a relative path to a full path 
 pub fn relative_to_full_path( relative_path : &str ) -> String {
     let full_path = Path::new(relative_path).canonicalize().unwrap();
-    full_path.to_str().unwrap().to_string()
+    let mut full_path = full_path.to_str().unwrap();
+    if cfg!(target_os = "windows") && full_path.starts_with("\\\\?\\"){
+        full_path = &full_path[4..]
+    }
+    full_path.to_string()
 }
 
 /// Convert a full path to a relative path
@@ -480,7 +493,7 @@ pub fn build_rust_project( project_directory : &str ) {
 
 pub fn python_interpreter_path( project_directory : &str ) -> String {
     let interpreter = if cfg!(target_os = "windows") {
-        Path::new(project_directory).join("venv").join("Scripts").join("python3.exe")
+        Path::new(project_directory).join("venv").join("Scripts").join("python.exe")
     } else {
         Path::new(project_directory).join("venv").join("bin").join("python3")
     };
