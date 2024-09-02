@@ -1,11 +1,17 @@
 # splendor_scripts
 Scripting utilities to facilitate setup and launch of Splendor AI competition on client devices
 
+Currently tested on Windows and Linux systems!
+
 ## Coming Soon
 
 - [x] Add support for creating new projects
-- [ ] Add support for running projects against each other
+- [x] Add support for running projects against each other
 - [x] Add support for saving configurations and editing them
+- [ ] Improve output for running projects
+- [ ] Reintroduce visualization for games
+- [ ] Improve build times by removing extraneous files and dependencies
+- [ ] Add support for updating projects / checking for the latest version of stourney
 
 ## Creating a new project
 
@@ -30,6 +36,15 @@ To edit the configuration of a project, run the following command:
 
 ```bash
 stourney config edit
+```
+
+## Running projects 
+
+To run projects against each other, run the following command:
+be sure to have set up the the competitors using the `config` commands!
+
+```bash
+stourney run
 ```
 
 ## Disclaimer
