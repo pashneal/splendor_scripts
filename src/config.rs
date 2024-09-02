@@ -19,7 +19,9 @@ pub struct ProjectConfig {
     #[serde(default)]
     pub selected_projects: Vec<String>,
     #[serde(default)]
-    pub recents: Vec<String>
+    pub recents: Vec<String>,
+    #[serde(default)]
+    pub port: u16
 }
 
 impl ::std::default::Default for ProjectConfig {
@@ -28,7 +30,8 @@ impl ::std::default::Default for ProjectConfig {
         api_key: "".into(),
         interpreter: "./venv/bin/python3".into(),
         selected_projects: Vec::new(),
-        recents: Vec::new()
+        recents: Vec::new(),
+        port: 3030,
     } }
 }
 

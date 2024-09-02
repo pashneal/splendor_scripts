@@ -303,19 +303,22 @@ fn maturin_build( directory : &str) {
         .find(|entry| entry.path().extension().map_or(false, |ext| ext == "whl"))
         .expect("[-] Failed to find .whl file");
 
-    let interpreter = Path::new(directory).join("venv").join("bin").join("python3");
-    let interpreter = interpreter.to_str().unwrap();
-    let interpreter = relative_to_full_path(interpreter);
+    let interpreter = python_interpreter_path(directory); 
+    info!("[+] Interpreter: {}", interpreter);
 
     trace!("Found whl file: {:?}", whl_file.path());
 
-    let _ = Command::new(&interpreter)
+    let command = Command::new(&interpreter)
         .arg("-m")
         .arg("pip")
         .arg("install")
         .arg(whl_file.path())
-        .output()
+        .arg("--force-reinstall")
+        .spawn();
+    command.expect("[-] Failed to install wheel file")
+        .wait()
         .expect("[-] Failed to install wheel file");
+
 
     info!("[+] Wheel file installed successfully!");
     
@@ -428,4 +431,33 @@ pub fn guess_project_type( directory : &str ) -> ProjectType {
         return ProjectType::Rust;
     }
     ProjectType::Unknown
+}
+
+pub fn build_rust_project( project_directory : &str ) {
+    let process = Command::new("cargo")
+        .arg("build")
+        .arg("--release")
+        .current_dir(project_directory)
+        .spawn();
+    let _ = process
+        .expect("[-] Failed to build rust project")
+        .wait()
+        .expect("[-] Failed to wait for rust project to build");
+    info!("[+] Rust project built successfully!");
+}
+
+pub fn python_interpreter_path( project_directory : &str ) -> String {
+    let interpreter = Path::new(project_directory).join("venv").join("bin").join("python3");
+    let interpreter = interpreter.to_str().unwrap();
+    interpreter.to_string()
+}
+pub fn python_binary_path( project_directory : &str ) -> String {
+    Path::new(project_directory).join("bot.py").to_str().unwrap().to_string()
+}
+
+pub fn rust_binary_path( project_directory : &str ) -> String {
+    let binary_path = Path::new(project_directory).join("target").join("release").join("rust_client");
+    let binary_path = binary_path.to_str().unwrap();
+    let binary_path = relative_to_full_path(binary_path);
+    binary_path
 }

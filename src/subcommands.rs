@@ -5,6 +5,8 @@ use std::path::Path;
 use crate::dialogue;
 use crate::constants;
 use crate::config;
+use std::time::Duration;
+use splendor_arena::Arena;
 
 /// Prints the version of the stourney binary
 pub fn version_command() {
@@ -76,5 +78,47 @@ pub fn show_competitors() {
     config::display_competitors();
 }
 
-pub fn run_command() {
+pub async fn run_command() {
+    let cfg = config::get_config();
+    if cfg.selected_projects.is_empty() {
+        println!("No competitors selected yet!");
+        println!("try running \n\tstourney config edit\nto add some competitors!");
+        return;
+    }
+
+    println!("[+] Running the tournament...");
+    let mut binaries = Vec::new();
+    let port : u16 = 3030;
+    let num_players = cfg.selected_projects.len() as u8;
+    let initial_time = Duration::from_secs(10);
+    let increment = Duration::from_secs(1);
+    let mut interpreter = None;
+
+    for competitor in cfg.selected_projects {
+        match utils::guess_project_type(&competitor) {
+            utils::ProjectType::Rust => {
+                utils::build_rust_project(&competitor);
+                binaries.push(utils::rust_binary_path(&competitor))
+            },
+            utils::ProjectType::Python => {
+                interpreter = Some(utils::python_interpreter_path(&competitor));
+                binaries.push(utils::python_binary_path(&competitor))
+            },
+            utils::ProjectType::Unknown => {
+                error!("[-] Unknown project type for {}", competitor);
+                error!("[-] Expected a Rust or Python project");
+                println!("[-] Exiting...");
+                return 
+            }
+        }
+    }
+
+    Arena::launch(
+        port,
+        binaries,
+        num_players,
+        initial_time,
+        increment,
+        interpreter,
+    ).await;
 }

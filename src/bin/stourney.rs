@@ -2,6 +2,8 @@ use clap_verbosity_flag::{Verbosity, WarnLevel};
 use clap::{Parser, Subcommand, Args};
 use stourney::{subcommands, config};
 
+pub use splendor_arena::tokio;
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -40,10 +42,12 @@ pub enum ConfigCommands {
     Show,
 }
 
-pub fn main() {
+#[tokio::main]
+pub async fn main() {
     let args = Cli::parse();
     env_logger::Builder::new().filter_level(args.verbose.log_level_filter()).init();
     config::init_config(); 
+
     if !config::correct_version() {
         // TODO: migrate config file to latest version
     }
@@ -74,7 +78,7 @@ pub fn main() {
         }
 
         Some(MainCommands::Run) => {
-            subcommands::run_command();
+            subcommands::run_command().await;
         }
 
         None => {
