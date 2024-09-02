@@ -21,19 +21,21 @@ pub fn git_exists() -> bool {
 pub fn python3_found() -> Option<String> {
     if cfg!(target_os = "windows") {
         trace!("[-] Detected Windows OS");
-        trace!("Issuing command python3 -version");
+        trace!("Issuing command python3 --version");
 
         let python3_exists_windows = Command::new("python3")
-            .arg("-version")
-            .output()
-            .is_ok();
-        if python3_exists_windows {
+            .arg("--version")
+            .output();
+
+        let python3_exists_windows = python3_exists_windows.unwrap();
+        let command_result_str = String::from_utf8_lossy(&python3_exists_windows.stdout);
+        if command_result_str.contains("Python 3"){
             return Some("python3".to_string());
         }
 
-        trace!("[-] Python 3 not found, attempting to use python -version");
+        trace!("[-] Python 3 not found, attempting to use python --version");
         let command_result = Command::new("python")
-            .arg("-version")
+            .arg("--version")
             .output();
         if !command_result.is_ok() {
             return None;
@@ -45,15 +47,16 @@ pub fn python3_found() -> Option<String> {
             return Some("python".to_string());
         } 
 
-        trace!("[-] Python 3 not found, attempting to use py -3.x -version");
+        trace!("[-] Python 3 not found, attempting to use py -3 --version");
         let command_result = Command::new("py")
-            .arg("-3.x")
-            .arg("-version")
+            .arg("-3")
+            .arg("--version")
             .output();
         if !command_result.is_ok() {
             return None;
         }
 
+        // Check that Python 3.x in string
         let command_result = command_result.unwrap();
         let command_result_str = String::from_utf8_lossy(&command_result.stdout);
         if command_result_str.contains("Python 3") {
@@ -66,11 +69,11 @@ pub fn python3_found() -> Option<String> {
         if !cfg!( target_os = "linux") {
             warn!("[-] Unexpected OS, behavior of this script may be strange!");
         }
-        let python3_exists_windows = Command::new("python3")
+        let python3_exists = Command::new("python3")
             .arg("--version")
             .output()
             .is_ok();
-        if python3_exists_windows {
+        if python3_exists {
             return Some("python3".to_string());
         }
         let command_result = Command::new("python")
@@ -94,7 +97,7 @@ pub fn python3_found() -> Option<String> {
 pub fn python_venv_found( interpreter : &str ) -> bool {
     if cfg!(target_os = "windows") && interpreter == "py" {
         let venv_exists = Command::new(interpreter)
-            .arg("-3.x")
+            .arg("-3")
             .arg("-m")
             .arg("venv")
             .output()
@@ -128,7 +131,7 @@ pub fn python_venv_found( interpreter : &str ) -> bool {
 pub fn python_pip_found( interpreter : &str ) -> bool {
     if cfg!(target_os = "windows") && interpreter == "py" {
         let pip_exists = Command::new(interpreter)
-            .arg("-3.x")
+            .arg("-3")
             .arg("-m")
             .arg("pip")
             .output()
@@ -213,10 +216,34 @@ pub fn setup_venv( directory : &str ) -> bool {
 }
 
 /// Setup a new python virtual environment in the specified directory
-#[cfg(not(target_os = "linux"))]
-pub fn setup_venv( directory : &str ) {
-    unimplemented!("[-] Unsupported OS, unable to complete this operation.");
+#[cfg(target_os = "windows")]
+pub fn setup_venv( directory : &str ) -> bool {
+    let python_interpreter =  python3_found().unwrap();
+    let command_result = Command::new(&python_interpreter)
+        .arg("-m")
+        .arg("venv")
+        .arg(directory)
+        .output();  
+    if !command_result.is_ok() {
+        error!("[-] Failed to create virtual environment in {}", directory);
+        return false;
+    }
+    info!("[+] Virtual environment created successfully!");
+
+    // Also install maturin 
+    let pip = Path::new(directory).join("Scripts").join("pip.exe");
+    let command_result = Command::new(&pip)
+        .arg("install")
+        .arg("maturin")
+        .output();
+    if !command_result.is_ok() {
+        error!("[-] Failed to install maturin");
+        return false;
+    }
+    info!("[+] maturin installed successfully!");
+    true
 }
+
 
 /// Clones a repository to a specified subdirectory
 /// Returns true if the operation was successful
@@ -269,7 +296,12 @@ fn maturin_build( directory : &str) {
 
     let old_path = std::env::var("PATH").expect("[-] Failed to get PATH variable");
 
-    let virtual_env_binaries = Path::new(directory).join("venv").join("bin");
+    
+    let virtual_env_binaries = if cfg!(target_os = "windows") {
+        Path::new(directory).join("venv").join("Scripts")
+    } else {
+        Path::new(directory).join("venv").join("bin")
+    };
     let virtual_env_binaries = virtual_env_binaries.to_str().unwrap();
     let virtual_env_binaries = relative_to_full_path(virtual_env_binaries);
 
@@ -447,7 +479,11 @@ pub fn build_rust_project( project_directory : &str ) {
 }
 
 pub fn python_interpreter_path( project_directory : &str ) -> String {
-    let interpreter = Path::new(project_directory).join("venv").join("bin").join("python3");
+    let interpreter = if cfg!(target_os = "windows") {
+        Path::new(project_directory).join("venv").join("Scripts").join("python3.exe")
+    } else {
+        Path::new(project_directory).join("venv").join("bin").join("python3")
+    };
     let interpreter = interpreter.to_str().unwrap();
     interpreter.to_string()
 }
