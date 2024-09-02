@@ -310,7 +310,7 @@ fn maturin_build( directory : &str) {
     let virtual_env_binaries = relative_to_full_path(virtual_env_binaries);
 
     // We need to add the virtual environment binaries to the path
-    // because maturin requires `bin/patchelf` to be in the path
+    // because maturin requires `bin/patchelf` to be in the path for linux systems
     let new_path = format!("{}:{}", old_path, virtual_env_binaries);
 
     let ffi_cargo_toml = Path::new(directory).join("lib").join("scaffolding").join("python_ffi").join("Cargo.toml").canonicalize().unwrap();
