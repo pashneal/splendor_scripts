@@ -1,3 +1,7 @@
+/// Contains utilities for interacting with the file system and directories
+/// of different operating systems, as well as interacting with external
+/// binaries
+
 use std::process::Command;
 use std::path::Path;
 use log::{warn, error, info, trace};
