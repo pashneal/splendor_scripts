@@ -627,8 +627,8 @@ pub fn out_of_date_projects() -> Vec<String> {
     let out_of_date = recents
         .iter()
         .filter(|x| {
-            (current_scaffolding_version(x) != current_scaffolding_remote_version(x)
-                || git_dirty(x))
+            current_scaffolding_version(x) != current_scaffolding_remote_version(x)
+                || git_dirty(x)
         })
         .map(|x| x.to_string())
         .collect();
