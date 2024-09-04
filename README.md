@@ -2,7 +2,7 @@
 Scripting utilities to facilitate setup and launch of Splendor AI competition on client devices
 
 Currently tested on Windows and Linux systems!
-## Prequisites
+## Prerequisites
 
 This script needs 
 - Rust (cargo) >= 1.50
