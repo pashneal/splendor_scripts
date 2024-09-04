@@ -14,8 +14,8 @@ This script needs
 - [x] Add support for running projects against each other
 - [x] Add support for saving configurations and editing them
 - [ ] Improve output for running projects
-- [ ] Reintroduce visualization for games
-- [ ] Improve build times by removing extraneous files and dependencies
+- [x] Reintroduce visualization for games
+- [x] Improve build times by removing extraneous files and dependencies
 - [ ] Add support for updating projects / checking for the latest version of stourney
 
 ## Creating a new project
