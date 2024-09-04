@@ -9,13 +9,13 @@ readme = "README.md"
 repository = "https://github.com/pashneal/stourney_scripts"
 
 [dependencies]
-clap = { version = "4.5.16", features = ["derive"] }
+clap = { version = "4.5.1", features = ["derive"] , default-features = false}
 clap-verbosity-flag = "2.2.1"
 confy = "0.6.1"
 derive = "1.0.0"
 dialoguer = { version = "0.11.0", default-features = false }
-env_logger = "0.11.5"
-log = "0.4.22"
-serde = { version = "1.0.209", default-features = false, features = ["derive"] }
+env_logger = "0.10.2"
+log = "0.4.20"
+serde = { version = "1.0.197", default-features = false, features = ["derive"] }
 splendor_arena = "0.1.8"
 
