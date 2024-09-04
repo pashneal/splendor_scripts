@@ -54,9 +54,8 @@ pub async fn main() {
     if !utils::out_of_date_projects().is_empty() {
         println!("Some projects are out of date, run `stourney update` to update them");
     }
-    
-    utils::check_for_updates();
 
+    utils::check_for_updates();
 
     match args.command {
         Some(MainCommands::New { directory }) => {
@@ -87,7 +86,6 @@ pub async fn main() {
             subcommands::run_command().await;
         }
 
-
         Some(MainCommands::Update) => {
             subcommands::update_command();
         }
@@ -97,6 +95,3 @@ pub async fn main() {
         }
     }
 }
-
-
-

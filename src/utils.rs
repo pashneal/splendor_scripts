@@ -1,6 +1,6 @@
+use crate::config;
 use crate::constants::*;
 use crate::dialogue;
-use crate::config;
 use log::{error, info, trace, warn};
 use std::path::Path;
 /// Contains utilities for interacting with the file system and directories
@@ -543,7 +543,6 @@ pub fn static_files_path(project_directory: &str) -> String {
     static_files
 }
 
-
 /// Returns the whether a git repository is dirty,
 /// that is, whether there are uncommitted changes
 /// TODO
@@ -552,7 +551,7 @@ pub fn git_dirty(_directory: &str) -> bool {
 }
 
 /// Returns the version of the current HEAD of the scaffolding in the given directory
-pub fn current_scaffolding_version(directory : &str) ->  String {
+pub fn current_scaffolding_version(directory: &str) -> String {
     let scaffolding = Path::new(directory).join("lib").join("scaffolding");
     let git_command = Command::new("git")
         .arg("rev-parse")
@@ -568,10 +567,9 @@ pub fn current_scaffolding_version(directory : &str) ->  String {
     git_command.trim().to_string()
 }
 
-
 /// Returns the version of the current HEAD of the remote branch origin/main
 /// of the scaffolding in the given directory
-pub fn current_scaffolding_remote_version(directory : &str) ->  String {
+pub fn current_scaffolding_remote_version(directory: &str) -> String {
     let scaffolding = Path::new(directory).join("lib").join("scaffolding");
     let git_command = Command::new("git")
         .arg("rev-parse")
@@ -580,7 +578,10 @@ pub fn current_scaffolding_remote_version(directory : &str) ->  String {
         .output();
 
     if git_command.is_err() {
-        warn!("[-] Failed to get scaffolding remote version of {}", directory);
+        warn!(
+            "[-] Failed to get scaffolding remote version of {}",
+            directory
+        );
         return "".to_string();
     }
 
@@ -591,7 +592,7 @@ pub fn current_scaffolding_remote_version(directory : &str) ->  String {
 }
 
 /// Updates the scaffolding in the given directory to the latest version
-pub fn update_scaffolding(directory : &str) {
+pub fn update_scaffolding(directory: &str) {
     let scaffolding = Path::new(directory).join("lib").join("scaffolding");
     let git_command = Command::new("git")
         .arg("stash")
@@ -618,7 +619,6 @@ pub fn update_scaffolding(directory : &str) {
     info!("[+] Project upgraded successfully! : {}", directory);
 }
 
-
 /// Returns all out of date projects in the recents list
 pub fn out_of_date_projects() -> Vec<String> {
     let cfg = config::get_config();
@@ -626,18 +626,20 @@ pub fn out_of_date_projects() -> Vec<String> {
 
     let out_of_date = recents
         .iter()
-        .filter(|x| (current_scaffolding_version(x) != current_scaffolding_remote_version(x) || git_dirty(x) ))
+        .filter(|x| {
+            (current_scaffolding_version(x) != current_scaffolding_remote_version(x)
+                || git_dirty(x))
+        })
         .map(|x| x.to_string())
         .collect();
     out_of_date
 }
 
-
 /// Checks if there are any out of date projects in the recents list
 /// and updates them if there are
 pub fn update_out_of_date_projects() {
-    // TODO: prompt user to update 
-    
+    // TODO: prompt user to update
+
     let out_of_date = out_of_date_projects();
     if out_of_date.is_empty() {
         info!("[+] No out of date projects found");
@@ -650,13 +652,9 @@ pub fn update_out_of_date_projects() {
     info!("[+] All out of date projects updated!");
 }
 
-
 /// Check stourney out of date and warns the user if it is
 pub fn check_for_updates() {
-    let cargo_command = Command::new("cargo")
-        .arg("search")
-        .arg("stourney")
-        .output();
+    let cargo_command = Command::new("cargo").arg("search").arg("stourney").output();
     if cargo_command.is_err() {
         warn!("[-] Failed to check for updates to stourney");
         return;

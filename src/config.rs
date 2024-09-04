@@ -1,7 +1,7 @@
 use crate::constants;
 use crate::utils;
-use serde::{Deserialize, Serialize};
 use log::info;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 /// `ProjectConfig` is a struct that holds the configuration for a project
@@ -148,7 +148,6 @@ pub fn display_competitors() {
         println!("  - {}", competitor);
     }
 }
-
 
 pub fn check_migration() {
     if !correct_version() {
