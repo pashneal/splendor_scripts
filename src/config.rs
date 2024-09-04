@@ -10,16 +10,37 @@ use serde::{Deserialize, Serialize};
 /// This is because we expect that the configuration will change from
 /// version to version, and we only require that the version
 /// field is present in the configuration file to check for compatibility
+///
+/// When changing fields in this struct, be sure to only 
+/// add new fields with default values, or to change the default, but
+/// not to remove fields, as this complicates the migration process
 pub struct ProjectConfig {
+    ///  The current version of the config file - must match `constants::VERSION`
     pub version: String,
     #[serde(default)]
+
+    /// The API key for authentication with the global stouney server
     pub api_key: String,
+
+    /// (Now unused) The python interpreter to use for running the project
     #[serde(default)]
     pub interpreter: String,
+
+    /// Projects that are selected for competition and runs when 
+    /// ```no_run
+    /// stourney run
+    /// ```
+    /// is executed
     #[serde(default)]
     pub selected_projects: Vec<String>,
+    
+    /// A list of recent project directories that have been used
+    /// sorted by most recent to least recent
     #[serde(default)]
     pub recents: Vec<String>,
+
+    /// The port to run a local storney server on 
+    /// defaults to 3030
     #[serde(default)]
     pub port: u16,
 }
@@ -36,6 +57,7 @@ impl ::std::default::Default for ProjectConfig {
         }
     }
 }
+
 
 /// Initializes a new config file, creates one if it does not yet exist
 pub fn init_config() {
