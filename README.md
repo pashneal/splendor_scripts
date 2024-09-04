@@ -16,7 +16,7 @@ This script needs
 - [ ] Improve output for running projects
 - [x] Reintroduce visualization for games
 - [x] Improve build times by removing extraneous files and dependencies
-- [ ] Add support for updating projects / checking for the latest version of stourney
+- [x] Add support for updating projects / checking for the latest version of stourney
 - [ ] Add replay logging and visualising
 
 ## Creating a new project
