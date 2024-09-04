@@ -1,6 +1,6 @@
 [package]
 name = "stourney"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 license = "MIT"
 keywords = ["splendor", "game", "tournament", "manager"]
@@ -17,5 +17,5 @@ dialoguer = { version = "0.11.0", default-features = false }
 env_logger = "0.11.5"
 log = "0.4.22"
 serde = { version = "1.0.209", default-features = false, features = ["derive"] }
-splendor_arena = "0.1.5"
+splendor_arena = "0.1.8"
 

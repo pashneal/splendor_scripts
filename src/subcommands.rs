@@ -6,7 +6,7 @@ use crate::dialogue;
 use crate::constants;
 use crate::config;
 use std::time::Duration;
-use splendor_arena::Arena;
+use splendor_arena::ArenaBuilder;
 
 /// Prints the version of the stourney binary
 pub fn version_command() {
@@ -89,10 +89,10 @@ pub async fn run_command() {
     println!("[+] Running the tournament...");
     let mut binaries = Vec::new();
     let port : u16 = 3030;
-    let num_players = cfg.selected_projects.len() as u8;
     let initial_time = Duration::from_secs(10);
     let increment = Duration::from_secs(1);
     let mut interpreter = None;
+    let mut static_files = None;
 
     for competitor in cfg.selected_projects {
         match utils::guess_project_type(&competitor) {
@@ -111,14 +111,18 @@ pub async fn run_command() {
                 return 
             }
         }
+
+        static_files = Some(utils::static_files_path(&competitor));
     }
 
-    Arena::launch(
-        port,
-        binaries,
-        num_players,
-        initial_time,
-        increment,
-        interpreter,
-    ).await;
+
+    let arena = ArenaBuilder::new()
+        .port(port)
+        .binaries(binaries)
+        .initial_time(initial_time)
+        .increment(increment)
+        .python_interpreter(&interpreter.unwrap())
+        .static_files(&static_files.unwrap())
+        .build();
+    arena.launch().await;
 }

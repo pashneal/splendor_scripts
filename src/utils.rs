@@ -519,3 +519,10 @@ pub fn rust_binary_path( project_directory : &str ) -> String {
     let binary_path = relative_to_full_path(binary_path);
     binary_path
 }
+
+pub fn static_files_path( project_directory : &str ) -> String {
+    let static_files = Path::new(project_directory).join("lib").join("scaffolding").join("frontend");
+    let static_files = static_files.to_str().unwrap();
+    let static_files = relative_to_full_path(static_files);
+    static_files
+}
