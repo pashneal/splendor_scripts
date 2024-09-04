@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 /// version to version, and we only require that the version
 /// field is present in the configuration file to check for compatibility
 ///
-/// When changing fields in this struct, be sure to only 
+/// When changing fields in this struct, be sure to only
 /// add new fields with default values, or to change the default, but
-/// not to remove fields, nor to change types as this complicates 
+/// not to remove fields, nor to change types as this complicates
 /// the migration process
 pub struct ProjectConfig {
     ///  The current version of the config file - must match `constants::VERSION`
@@ -27,20 +27,20 @@ pub struct ProjectConfig {
     #[serde(default)]
     pub interpreter: String,
 
-    /// Projects that are selected for competition and runs when 
+    /// Projects that are selected for competition and runs when
     /// ```no_run
     /// stourney run
     /// ```
     /// is executed
     #[serde(default)]
     pub selected_projects: Vec<String>,
-    
+
     /// A list of recent project directories that have been used
     /// sorted by most recent to least recent
     #[serde(default)]
     pub recents: Vec<String>,
 
-    /// The port to run a local storney server on 
+    /// The port to run a local storney server on
     /// defaults to 3030
     #[serde(default)]
     pub port: u16,
@@ -58,7 +58,6 @@ impl ::std::default::Default for ProjectConfig {
         }
     }
 }
-
 
 /// Migrates the config file to the latest version
 /// by adding new unspecified fields with default values
