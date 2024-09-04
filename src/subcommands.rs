@@ -125,3 +125,13 @@ pub async fn run_command() {
         .build();
     arena.launch().await;
 }
+
+pub fn update_command() {
+    println!("[+] Updating stourney projects...");
+    config::purge_recents();
+    let projects = utils::out_of_date_projects();
+    for project in projects {
+        println!("[+] Updating project: {}...", project);
+        utils::update_scaffolding(&project);
+    }
+}

@@ -1,8 +1,6 @@
 use clap::{Args, Parser, Subcommand};
 use clap_verbosity_flag::{Verbosity, WarnLevel};
-use log::info;
-use stourney::constants;
-use stourney::{config, subcommands};
+use stourney::{config, subcommands, utils};
 
 pub use splendor_arena::tokio;
 
@@ -26,6 +24,8 @@ enum MainCommands {
     Config(ConfigArgs),
     /// Run a competition
     Run,
+    /// Updates the projects that stourney knows about
+    Update,
 }
 
 #[derive(Args)]
@@ -50,15 +50,13 @@ pub async fn main() {
         .filter_level(args.verbose.log_level_filter())
         .init();
     config::init_config();
-
-    if !config::correct_version() {
-        info!(
-            "[+] Migrating config file from {} to {}",
-            config::get_config().version,
-            constants::VERSION
-        );
-        config::migrate_config();
+    config::check_migration();
+    if !utils::out_of_date_projects().is_empty() {
+        println!("Some projects are out of date, run `stourney update` to update them");
     }
+    
+    utils::check_for_updates();
+
 
     match args.command {
         Some(MainCommands::New { directory }) => {
@@ -89,8 +87,16 @@ pub async fn main() {
             subcommands::run_command().await;
         }
 
+
+        Some(MainCommands::Update) => {
+            subcommands::update_command();
+        }
+
         None => {
             println!("[-] Nothing to do, try running with --help");
         }
     }
 }
+
+
+
