@@ -1,21 +1,17 @@
+use crate::constants::*;
+use crate::dialogue;
+use log::{error, info, trace, warn};
+use std::path::Path;
 /// Contains utilities for interacting with the file system and directories
 /// of different operating systems, as well as interacting with external
 /// binaries
-
 use std::process::Command;
-use std::path::Path;
-use log::{warn, error, info, trace};
 use std::{fs, io};
-use crate::constants::*;
-use crate::dialogue;
 
 /// Checks to see if git exists and is callable on this system
 /// This function is required to be os agnostic
 pub fn git_exists() -> bool {
-    let git_exists = Command::new("git")
-        .arg("version")
-        .output()
-        .is_ok();
+    let git_exists = Command::new("git").arg("version").output().is_ok();
     git_exists
 }
 
@@ -27,20 +23,16 @@ pub fn python3_found() -> Option<String> {
         trace!("[-] Detected Windows OS");
         trace!("Issuing command python3 --version");
 
-        let python3_exists_windows = Command::new("python3")
-            .arg("--version")
-            .output();
+        let python3_exists_windows = Command::new("python3").arg("--version").output();
 
         let python3_exists_windows = python3_exists_windows.unwrap();
         let command_result_str = String::from_utf8_lossy(&python3_exists_windows.stdout);
-        if command_result_str.contains("Python 3"){
+        if command_result_str.contains("Python 3") {
             return Some("python3".to_string());
         }
 
         trace!("[-] Python 3 not found, attempting to use python --version");
-        let command_result = Command::new("python")
-            .arg("--version")
-            .output();
+        let command_result = Command::new("python").arg("--version").output();
         if !command_result.is_ok() {
             return None;
         }
@@ -49,13 +41,10 @@ pub fn python3_found() -> Option<String> {
         let command_result_str = String::from_utf8_lossy(&command_result.stdout);
         if command_result_str.contains("Python 3") {
             return Some("python".to_string());
-        } 
+        }
 
         trace!("[-] Python 3 not found, attempting to use py -3 --version");
-        let command_result = Command::new("py")
-            .arg("-3")
-            .arg("--version")
-            .output();
+        let command_result = Command::new("py").arg("-3").arg("--version").output();
         if !command_result.is_ok() {
             return None;
         }
@@ -70,19 +59,14 @@ pub fn python3_found() -> Option<String> {
         trace!("[-] Python 3 not found!");
         None
     } else {
-        if !cfg!( target_os = "linux") {
+        if !cfg!(target_os = "linux") {
             warn!("[-] Unexpected OS, behavior of this script may be strange!");
         }
-        let python3_exists = Command::new("python3")
-            .arg("--version")
-            .output()
-            .is_ok();
+        let python3_exists = Command::new("python3").arg("--version").output().is_ok();
         if python3_exists {
             return Some("python3".to_string());
         }
-        let command_result = Command::new("python")
-            .arg("--version")
-            .output();
+        let command_result = Command::new("python").arg("--version").output();
         if !command_result.is_ok() {
             return None;
         }
@@ -91,14 +75,14 @@ pub fn python3_found() -> Option<String> {
         let command_result_str = String::from_utf8_lossy(&command_result.stdout);
         if command_result_str.contains("Python 3") {
             return Some("python".to_string());
-        } 
+        }
         None
-    } 
+    }
 }
 
 /// Given a path to a string that is a python interpreter, check to see if
 /// the venv module is available
-pub fn python_venv_found( interpreter : &str ) -> bool {
+pub fn python_venv_found(interpreter: &str) -> bool {
     if cfg!(target_os = "windows") && interpreter == "py" {
         let venv_exists = Command::new(interpreter)
             .arg("-3")
@@ -128,11 +112,10 @@ pub fn python_venv_found( interpreter : &str ) -> bool {
     return true;
 }
 
-
 /// Given a path to a string that is a python interpreter, check to see if
 /// the pip module is available
-/// TODO: also try for pip3 
-pub fn python_pip_found( interpreter : &str ) -> bool {
+/// TODO: also try for pip3
+pub fn python_pip_found(interpreter: &str) -> bool {
     if cfg!(target_os = "windows") && interpreter == "py" {
         let pip_exists = Command::new(interpreter)
             .arg("-3")
@@ -167,7 +150,7 @@ pub fn prereqs_found() -> bool {
         error!("[-] Git not found, please install git and try again");
         return false;
     }
-    let python_interpreter =  python3_found();
+    let python_interpreter = python3_found();
     if python_interpreter.is_some() {
         info!("[+] Python 3 found!");
     } else {
@@ -194,7 +177,7 @@ pub fn prereqs_found() -> bool {
 
 /// Setup a new python virtual environment in the specified directory
 #[cfg(target_os = "linux")]
-pub fn setup_venv( directory : &str ) -> bool {
+pub fn setup_venv(directory: &str) -> bool {
     let command_result = Command::new("python3")
         .arg("-m")
         .arg("venv")
@@ -221,25 +204,22 @@ pub fn setup_venv( directory : &str ) -> bool {
 
 /// Setup a new python virtual environment in the specified directory
 #[cfg(target_os = "windows")]
-pub fn setup_venv( directory : &str ) -> bool {
-    let python_interpreter =  python3_found().unwrap();
+pub fn setup_venv(directory: &str) -> bool {
+    let python_interpreter = python3_found().unwrap();
     let command_result = Command::new(&python_interpreter)
         .arg("-m")
         .arg("venv")
         .arg(directory)
-        .output();  
+        .output();
     if !command_result.is_ok() {
         error!("[-] Failed to create virtual environment in {}", directory);
         return false;
     }
     info!("[+] Virtual environment created successfully!");
 
-    // Also install maturin 
+    // Also install maturin
     let pip = Path::new(directory).join("Scripts").join("pip.exe");
-    let command_result = Command::new(&pip)
-        .arg("install")
-        .arg("maturin")
-        .output();
+    let command_result = Command::new(&pip).arg("install").arg("maturin").output();
     if !command_result.is_ok() {
         error!("[-] Failed to install maturin");
         return false;
@@ -248,10 +228,9 @@ pub fn setup_venv( directory : &str ) -> bool {
     true
 }
 
-
 /// Clones a repository to a specified subdirectory
 /// Returns true if the operation was successful
-pub fn clone_repo( subdirectory : &str, repo_url : &str ) -> bool {
+pub fn clone_repo(subdirectory: &str, repo_url: &str) -> bool {
     let command_result = Command::new("git")
         .arg("clone")
         .arg(repo_url)
@@ -264,7 +243,6 @@ pub fn clone_repo( subdirectory : &str, repo_url : &str ) -> bool {
     info!("[+] Repository cloned successfully!");
     true
 }
-
 
 /// Copy all of a given directories contents to a new location
 fn copy_dir_all(source: impl AsRef<Path>, destination: impl AsRef<Path>) -> io::Result<()> {
@@ -283,11 +261,11 @@ fn copy_dir_all(source: impl AsRef<Path>, destination: impl AsRef<Path>) -> io::
 
 /// Copy example file to the specified directory
 /// Returns true if the operation was successful
-pub fn copy_example( example : &Path, directory : &str ) -> bool {
+pub fn copy_example(example: &Path, directory: &str) -> bool {
     let source_dir = Path::new(&directory).join("lib").join(example);
     if copy_dir_all(&source_dir, directory).is_err() {
         error!("[-] Failed to copy example directory");
-        return false
+        return false;
     }
     true
 }
@@ -295,11 +273,11 @@ pub fn copy_example( example : &Path, directory : &str ) -> bool {
 /// Builds a maturin project in the partially initialized project directory
 /// so that FFI bindings for python can be installed to the python
 /// virtual environment
-fn maturin_build( directory : &str) {
-    // TODO: simple error handling 
+fn maturin_build(directory: &str) {
+    // TODO: simple error handling
 
     let old_path = std::env::var("PATH").expect("[-] Failed to get PATH variable");
-    
+
     let virtual_env_binaries = if cfg!(target_os = "windows") {
         Path::new(directory).join("venv").join("Scripts")
     } else {
@@ -316,7 +294,13 @@ fn maturin_build( directory : &str) {
         format!("{}:{}", virtual_env_binaries, old_path)
     };
 
-    let ffi_cargo_toml = Path::new(directory).join("lib").join("scaffolding").join("python_ffi").join("Cargo.toml").canonicalize().unwrap();
+    let ffi_cargo_toml = Path::new(directory)
+        .join("lib")
+        .join("scaffolding")
+        .join("python_ffi")
+        .join("Cargo.toml")
+        .canonicalize()
+        .unwrap();
     let mut ffi_cargo_toml = ffi_cargo_toml.to_str().unwrap();
     if cfg!(target_os = "windows") && ffi_cargo_toml.starts_with("\\\\?\\") {
         //strip out \\?\ string for canonical
@@ -343,12 +327,13 @@ fn maturin_build( directory : &str) {
     info!("[+] Maturin project built successfully!");
 
     // Walk the contents of the bin directory for a .whl file
-    let whl_file = fs::read_dir(&virtual_env_binaries).expect("[-] Failed to read directory contents")
+    let whl_file = fs::read_dir(&virtual_env_binaries)
+        .expect("[-] Failed to read directory contents")
         .filter_map(|entry| entry.ok())
         .find(|entry| entry.path().extension().map_or(false, |ext| ext == "whl"))
         .expect("[-] Failed to find .whl file");
 
-    let interpreter = python_interpreter_path(directory); 
+    let interpreter = python_interpreter_path(directory);
     info!("[+] Interpreter: {}", interpreter);
 
     trace!("Found whl file: {:?}", whl_file.path());
@@ -365,13 +350,12 @@ fn maturin_build( directory : &str) {
         .arg(&whl_file)
         .arg("--force-reinstall")
         .spawn();
-    command.expect("[-] Failed to install wheel file")
+    command
+        .expect("[-] Failed to install wheel file")
         .wait()
         .expect("[-] Failed to install wheel file");
 
-
     info!("[+] Wheel file installed successfully!");
-    
 }
 
 /// Creates a new project in the specified empty directory
@@ -379,7 +363,7 @@ fn maturin_build( directory : &str) {
 /// - Initializes the python virtual environment needed for the project
 /// - Initializes project template with given parameters
 /// TODO: clean up .git?
-pub fn create_project( project_directory : &str ) -> bool {
+pub fn create_project(project_directory: &str) -> bool {
     let arena_lib = Path::new(&project_directory).join("lib");
     let arena_lib = arena_lib.to_str().unwrap();
     let venv_dir = Path::new(&project_directory).join("venv");
@@ -391,60 +375,76 @@ pub fn create_project( project_directory : &str ) -> bool {
         dialogue::rust_template()
     };
 
-
     println!("[+] Downloading and installing...");
-    if !clone_repo(&arena_lib, STOURNEY_ARENA_REPO_URL) { return false; }
-    if !copy_example(&example, &project_directory) { return false; }
-    if !setup_venv(venv_dir) { return false; }  
+    if !clone_repo(&arena_lib, STOURNEY_ARENA_REPO_URL) {
+        return false;
+    }
+    if !copy_example(&example, &project_directory) {
+        return false;
+    }
+    if !setup_venv(venv_dir) {
+        return false;
+    }
     maturin_build(&project_directory);
     true
 }
 
-
-/// Check whether the given directory is likely to have 
+/// Check whether the given directory is likely to have
 /// been created by the command:
 ///
 /// ```no_run
 /// stourney new <directory>
 /// ```
-pub fn check_project(directory : &str, verbose: bool) -> bool {
-    if !Path::new(directory).exists() { 
+pub fn check_project(directory: &str, verbose: bool) -> bool {
+    if !Path::new(directory).exists() {
         if verbose {
             error!("[-] Directory {} does not exist", directory);
         }
-        return false; 
+        return false;
     }
-    if !Path::new(directory).is_dir() { 
+    if !Path::new(directory).is_dir() {
         if verbose {
             error!("[-] Path {} is not a directory", directory);
         }
-        return false; 
+        return false;
     }
-    if !Path::new(directory).join("lib").exists() { 
+    if !Path::new(directory).join("lib").exists() {
         if verbose {
-            error!("[-] Directory {} does not contain a lib directory", directory);
+            error!(
+                "[-] Directory {} does not contain a lib directory",
+                directory
+            );
         }
-        return false; 
+        return false;
     }
-    if !Path::new(directory).join("lib").is_dir() { 
+    if !Path::new(directory).join("lib").is_dir() {
         if verbose {
-        error!("[-] Directory {} does not contain a lib directory", directory);
+            error!(
+                "[-] Directory {} does not contain a lib directory",
+                directory
+            );
         }
-        return false; 
+        return false;
     }
-    if !Path::new(directory).join("venv").exists() { 
+    if !Path::new(directory).join("venv").exists() {
         if verbose {
-        error!("[-] Directory {} does not contain a venv directory", directory);
+            error!(
+                "[-] Directory {} does not contain a venv directory",
+                directory
+            );
         }
-        return false; 
+        return false;
     }
-    if !Path::new(directory).join("venv").is_dir() { 
+    if !Path::new(directory).join("venv").is_dir() {
         if verbose {
-            error!("[-] Directory {} does not contain a venv directory", directory);
+            error!(
+                "[-] Directory {} does not contain a venv directory",
+                directory
+            );
         }
-        return false; 
+        return false;
     }
-    if  matches!(guess_project_type(directory), ProjectType::Unknown) {
+    if matches!(guess_project_type(directory), ProjectType::Unknown) {
         if verbose {
             error!("[-] Directory {} is invalid", directory);
             error!("[-] Expected a Cargo.toml or bot.py file");
@@ -454,30 +454,29 @@ pub fn check_project(directory : &str, verbose: bool) -> bool {
     return true;
 }
 
-
-/// Convert a relative path to a full path 
-pub fn relative_to_full_path( relative_path : &str ) -> String {
+/// Convert a relative path to a full path
+pub fn relative_to_full_path(relative_path: &str) -> String {
     let full_path = Path::new(relative_path).canonicalize().unwrap();
     let mut full_path = full_path.to_str().unwrap();
-    if cfg!(target_os = "windows") && full_path.starts_with("\\\\?\\"){
+    if cfg!(target_os = "windows") && full_path.starts_with("\\\\?\\") {
         full_path = &full_path[4..]
     }
     full_path.to_string()
 }
 
 /// Convert a full path to a relative path
-pub fn full_to_relative_path( _full_path : &str ) -> String {
+pub fn full_to_relative_path(_full_path: &str) -> String {
     todo!()
 }
 
 pub enum ProjectType {
     Python,
     Rust,
-    Unknown
+    Unknown,
 }
 
 /// Guess the project type based on the contents of the directory
-pub fn guess_project_type( directory : &str ) -> ProjectType {
+pub fn guess_project_type(directory: &str) -> ProjectType {
     if Path::new(directory).join("bot.py").exists() {
         return ProjectType::Python;
     }
@@ -487,7 +486,7 @@ pub fn guess_project_type( directory : &str ) -> ProjectType {
     ProjectType::Unknown
 }
 
-pub fn build_rust_project( project_directory : &str ) {
+pub fn build_rust_project(project_directory: &str) {
     let process = Command::new("cargo")
         .arg("build")
         .arg("--release")
@@ -500,28 +499,44 @@ pub fn build_rust_project( project_directory : &str ) {
     info!("[+] Rust project built successfully!");
 }
 
-pub fn python_interpreter_path( project_directory : &str ) -> String {
+pub fn python_interpreter_path(project_directory: &str) -> String {
     let interpreter = if cfg!(target_os = "windows") {
-        Path::new(project_directory).join("venv").join("Scripts").join("python.exe")
+        Path::new(project_directory)
+            .join("venv")
+            .join("Scripts")
+            .join("python.exe")
     } else {
-        Path::new(project_directory).join("venv").join("bin").join("python3")
+        Path::new(project_directory)
+            .join("venv")
+            .join("bin")
+            .join("python3")
     };
     let interpreter = interpreter.to_str().unwrap();
     interpreter.to_string()
 }
-pub fn python_binary_path( project_directory : &str ) -> String {
-    Path::new(project_directory).join("bot.py").to_str().unwrap().to_string()
+pub fn python_binary_path(project_directory: &str) -> String {
+    Path::new(project_directory)
+        .join("bot.py")
+        .to_str()
+        .unwrap()
+        .to_string()
 }
 
-pub fn rust_binary_path( project_directory : &str ) -> String {
-    let binary_path = Path::new(project_directory).join("target").join("release").join("rust_client");
+pub fn rust_binary_path(project_directory: &str) -> String {
+    let binary_path = Path::new(project_directory)
+        .join("target")
+        .join("release")
+        .join("rust_client");
     let binary_path = binary_path.to_str().unwrap();
     let binary_path = relative_to_full_path(binary_path);
     binary_path
 }
 
-pub fn static_files_path( project_directory : &str ) -> String {
-    let static_files = Path::new(project_directory).join("lib").join("scaffolding").join("frontend");
+pub fn static_files_path(project_directory: &str) -> String {
+    let static_files = Path::new(project_directory)
+        .join("lib")
+        .join("scaffolding")
+        .join("frontend");
     let static_files = static_files.to_str().unwrap();
     let static_files = relative_to_full_path(static_files);
     static_files

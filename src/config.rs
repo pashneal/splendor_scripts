@@ -1,13 +1,13 @@
-use serde::{Serialize, Deserialize};
 use crate::constants;
 use crate::utils;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 /// `ProjectConfig` is a struct that holds the configuration for a project
 ///
 /// Note the default fields.
 ///
-/// This is because we expect that the configuration will change from 
+/// This is because we expect that the configuration will change from
 /// version to version, and we only require that the version
 /// field is present in the configuration file to check for compatibility
 pub struct ProjectConfig {
@@ -21,22 +21,24 @@ pub struct ProjectConfig {
     #[serde(default)]
     pub recents: Vec<String>,
     #[serde(default)]
-    pub port: u16
+    pub port: u16,
 }
 
 impl ::std::default::Default for ProjectConfig {
-    fn default() -> Self { Self { 
-        version: constants::VERSION.to_owned(), 
-        api_key: "".into(),
-        interpreter: "./venv/bin/python3".into(),
-        selected_projects: Vec::new(),
-        recents: Vec::new(),
-        port: 3030,
-    } }
+    fn default() -> Self {
+        Self {
+            version: constants::VERSION.to_owned(),
+            api_key: "".into(),
+            interpreter: "./venv/bin/python3".into(),
+            selected_projects: Vec::new(),
+            recents: Vec::new(),
+            port: 3030,
+        }
+    }
 }
 
 /// Initializes a new config file, creates one if it does not yet exist
-pub fn init_config(){
+pub fn init_config() {
     let cfg = get_config();
     let stored = confy::store(constants::CONF_FILE_NAME, None, cfg);
     purge_recents();
@@ -48,7 +50,7 @@ pub fn init_config(){
 pub fn get_config() -> ProjectConfig {
     let cfg = confy::load(constants::CONF_FILE_NAME, None);
     let cfg = cfg.expect("[-] Failed to load config file");
-    cfg 
+    cfg
 }
 
 /// Saves the config file
@@ -57,11 +59,10 @@ pub fn save_config(cfg: ProjectConfig) {
     stored.expect("[-] Failed to save config file");
 }
 
-
 /// Returns true if the latest version of the config file is being used
 pub fn correct_version() -> bool {
     let cfg = get_config();
-    cfg.version == constants::VERSION 
+    cfg.version == constants::VERSION
 }
 
 /// Purges the invalid directories from the recents list in the config file
@@ -100,4 +101,3 @@ pub fn display_competitors() {
         println!("  - {}", competitor);
     }
 }
-

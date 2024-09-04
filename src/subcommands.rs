@@ -1,12 +1,12 @@
+use crate::config;
+use crate::constants;
+use crate::dialogue;
 use crate::utils;
 use log::*;
+use splendor_arena::ArenaBuilder;
 use std::fs;
 use std::path::Path;
-use crate::dialogue;
-use crate::constants;
-use crate::config;
 use std::time::Duration;
-use splendor_arena::ArenaBuilder;
 
 /// Prints the version of the stourney binary
 pub fn version_command() {
@@ -14,7 +14,7 @@ pub fn version_command() {
 }
 
 /// Guides a user through creating a new project in the specified directory
-pub fn new_command(directory : &str) {
+pub fn new_command(directory: &str) {
     //TODO: Error handling for the expects
 
     println!("[+] Creating a new project...");
@@ -88,7 +88,7 @@ pub async fn run_command() {
 
     println!("[+] Running the tournament...");
     let mut binaries = Vec::new();
-    let port : u16 = 3030;
+    let port: u16 = 3030;
     let initial_time = Duration::from_secs(10);
     let increment = Duration::from_secs(1);
     let mut interpreter = None;
@@ -99,22 +99,21 @@ pub async fn run_command() {
             utils::ProjectType::Rust => {
                 utils::build_rust_project(&competitor);
                 binaries.push(utils::rust_binary_path(&competitor))
-            },
+            }
             utils::ProjectType::Python => {
                 interpreter = Some(utils::python_interpreter_path(&competitor));
                 binaries.push(utils::python_binary_path(&competitor))
-            },
+            }
             utils::ProjectType::Unknown => {
                 error!("[-] Unknown project type for {}", competitor);
                 error!("[-] Expected a Rust or Python project");
                 println!("[-] Exiting...");
-                return 
+                return;
             }
         }
 
         static_files = Some(utils::static_files_path(&competitor));
     }
-
 
     let arena = ArenaBuilder::new()
         .port(port)

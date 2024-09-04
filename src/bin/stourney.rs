@@ -1,6 +1,6 @@
+use clap::{Args, Parser, Subcommand};
 use clap_verbosity_flag::{Verbosity, WarnLevel};
-use clap::{Parser, Subcommand, Args};
-use stourney::{subcommands, config};
+use stourney::{config, subcommands};
 
 pub use splendor_arena::tokio;
 
@@ -24,14 +24,13 @@ enum MainCommands {
     Config(ConfigArgs),
     /// Run a competition
     Run,
-
 }
 
 #[derive(Args)]
 #[command(args_conflicts_with_subcommands = true)]
 struct ConfigArgs {
     #[command(subcommand)]
-    command : Option<ConfigCommands>,
+    command: Option<ConfigCommands>,
 }
 
 #[derive(Subcommand)]
@@ -45,8 +44,10 @@ pub enum ConfigCommands {
 #[tokio::main]
 pub async fn main() {
     let args = Cli::parse();
-    env_logger::Builder::new().filter_level(args.verbose.log_level_filter()).init();
-    config::init_config(); 
+    env_logger::Builder::new()
+        .filter_level(args.verbose.log_level_filter())
+        .init();
+    config::init_config();
 
     if !config::correct_version() {
         // TODO: migrate config file to latest version
@@ -57,14 +58,14 @@ pub async fn main() {
             subcommands::new_command(&directory);
         }
 
-        Some (MainCommands::Version) => {
+        Some(MainCommands::Version) => {
             subcommands::version_command();
         }
 
         Some(MainCommands::Config(args)) => {
             if args.command.is_none() {
                 subcommands::show_competitors();
-                return; 
+                return;
             }
             let command = args.command.unwrap();
             match command {
