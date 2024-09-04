@@ -13,16 +13,17 @@ use serde::{Deserialize, Serialize};
 ///
 /// When changing fields in this struct, be sure to only 
 /// add new fields with default values, or to change the default, but
-/// not to remove fields, as this complicates the migration process
+/// not to remove fields, nor to change types as this complicates 
+/// the migration process
 pub struct ProjectConfig {
     ///  The current version of the config file - must match `constants::VERSION`
     pub version: String,
-    #[serde(default)]
 
     /// The API key for authentication with the global stouney server
+    #[serde(default)]
     pub api_key: String,
 
-    /// (Now unused) The python interpreter to use for running the project
+    /// (deprecated) The python interpreter to use for running the project
     #[serde(default)]
     pub interpreter: String,
 
@@ -58,6 +59,30 @@ impl ::std::default::Default for ProjectConfig {
     }
 }
 
+
+/// Migrates the config file to the latest version
+/// by adding new unspecified fields with default values
+pub fn migrate_config() {
+    let default = ProjectConfig::default();
+    let mut cfg = get_config();
+    cfg.version = default.version;
+    if cfg.api_key.is_empty() {
+        cfg.api_key = default.api_key;
+    }
+    if cfg.interpreter.is_empty() {
+        cfg.interpreter = default.interpreter;
+    }
+    if cfg.selected_projects.is_empty() {
+        cfg.selected_projects = default.selected_projects;
+    }
+    if cfg.recents.is_empty() {
+        cfg.recents = default.recents;
+    }
+    if cfg.port == u16::default() {
+        cfg.port = default.port;
+    }
+    save_config(cfg);
+}
 
 /// Initializes a new config file, creates one if it does not yet exist
 pub fn init_config() {

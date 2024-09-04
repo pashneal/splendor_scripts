@@ -1,6 +1,8 @@
 use clap::{Args, Parser, Subcommand};
 use clap_verbosity_flag::{Verbosity, WarnLevel};
 use stourney::{config, subcommands};
+use stourney::constants;
+use log::info;
 
 pub use splendor_arena::tokio;
 
@@ -50,7 +52,8 @@ pub async fn main() {
     config::init_config();
 
     if !config::correct_version() {
-        // TODO: migrate config file to latest version
+        info!("[+] Migrating config file from {} to {}", config::get_config().version, constants::VERSION);
+        config::migrate_config();
     }
 
     match args.command {
