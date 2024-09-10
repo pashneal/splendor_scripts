@@ -53,6 +53,7 @@ pub fn new_command(directory: &str) {
     }
 }
 
+/// Guides a user through configuring the stourney binary
 pub fn configure_command() {
     let mut num_competitors = dialogue::num_competitors();
     let mut competitors = Vec::new();
@@ -74,10 +75,12 @@ pub fn configure_command() {
     println!("[+] To run the project, try: \n\tstourney run");
 }
 
+/// Displays the current competitors in the configuration
 pub fn show_competitors() {
     config::display_competitors();
 }
 
+/// Guides a user through running a competition
 pub async fn run_command() {
     let cfg = config::get_config();
     if cfg.selected_projects.is_empty() {
@@ -95,14 +98,10 @@ pub async fn run_command() {
     let mut static_files = None;
 
     for competitor in cfg.selected_projects {
-        match utils::guess_project_type(&competitor) {
-            utils::ProjectType::Rust => {
-                utils::build_rust_project(&competitor);
-                binaries.push(utils::rust_binary_path(&competitor))
-            }
-            utils::ProjectType::Python => {
+        let project_type = utils::guess_project_type(&competitor);
+        match project_type {
+            utils::ProjectType::Rust | utils::ProjectType::Python => {
                 interpreter = Some(utils::python_interpreter_path(&competitor));
-                binaries.push(utils::python_binary_path(&competitor))
             }
             utils::ProjectType::Unknown => {
                 error!("[-] Unknown project type for {}", competitor);
@@ -112,8 +111,26 @@ pub async fn run_command() {
             }
         }
 
+        match project_type {
+            utils::ProjectType::Rust => {
+                binaries.push(utils::rust_binary_path(&competitor));
+            }
+            utils::ProjectType::Python => {
+                binaries.push(utils::python_binary_path(&competitor));
+            }
+            _ => {}
+        }
+
         static_files = Some(utils::static_files_path(&competitor));
     }
+
+    info!("Launching the arena...");
+    trace!("Port: {}", port);
+    trace!("Initial time: {:?}", initial_time);
+    trace!("Increment: {:?}", increment);
+    trace!("Interpreter: {:?}", interpreter);
+    trace!("Static files: {:?}", static_files);
+    trace!("Binaries: {:?}", binaries);
 
     let arena = ArenaBuilder::new()
         .port(port)
@@ -126,6 +143,7 @@ pub async fn run_command() {
     arena.launch().await;
 }
 
+/// Attempts to update the stourney projects that exist in the recents list
 pub fn update_command() {
     println!("[+] Updating stourney projects...");
     config::purge_recents();
