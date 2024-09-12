@@ -457,8 +457,8 @@ pub fn check_project(directory: &str, verbose: bool) -> bool {
 
 /// Convert a relative path to a full path
 pub fn relative_to_full_path(relative_path: &str) -> String {
-    trace!("Converting relative path to full path: {}", relative_path); 
-    
+    trace!("Converting relative path to full path: {}", relative_path);
+
     let full_path = Path::new(relative_path).canonicalize().unwrap();
     let mut full_path = full_path.to_str().unwrap();
     if cfg!(target_os = "windows") && full_path.starts_with("\\\\?\\") {
@@ -631,8 +631,7 @@ pub fn out_of_date_projects() -> Vec<String> {
     let out_of_date = recents
         .iter()
         .filter(|x| {
-            current_scaffolding_version(x) != current_scaffolding_remote_version(x)
-                || git_dirty(x)
+            current_scaffolding_version(x) != current_scaffolding_remote_version(x) || git_dirty(x)
         })
         .map(|x| x.to_string())
         .collect();
