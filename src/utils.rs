@@ -457,11 +457,15 @@ pub fn check_project(directory: &str, verbose: bool) -> bool {
 
 /// Convert a relative path to a full path
 pub fn relative_to_full_path(relative_path: &str) -> String {
+    trace!("Converting relative path to full path: {}", relative_path); 
+    
     let full_path = Path::new(relative_path).canonicalize().unwrap();
     let mut full_path = full_path.to_str().unwrap();
     if cfg!(target_os = "windows") && full_path.starts_with("\\\\?\\") {
         full_path = &full_path[4..]
     }
+
+    trace!("Full path: {}", full_path);
     full_path.to_string()
 }
 

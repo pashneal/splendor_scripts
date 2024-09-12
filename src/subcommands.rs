@@ -113,6 +113,7 @@ pub async fn run_command() {
 
         match project_type {
             utils::ProjectType::Rust => {
+                utils::build_rust_project(&competitor);
                 binaries.push(utils::rust_binary_path(&competitor));
             }
             utils::ProjectType::Python => {
