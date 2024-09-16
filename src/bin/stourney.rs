@@ -22,10 +22,13 @@ enum MainCommands {
     Version,
     /// Configure the stourney binary
     Config(ConfigArgs),
-    /// Run a competition
+    /// Run a competition locally
     Run,
     /// Updates the projects that stourney knows about
     Update,
+    /// Run and serve a game to global stourney server, where
+    /// you can watch the game in real-time online
+    Watch,
 }
 
 #[derive(Args)]
@@ -88,6 +91,10 @@ pub async fn main() {
 
         Some(MainCommands::Update) => {
             subcommands::update_command();
+        }
+
+        Some(MainCommands::Watch) => {
+            subcommands::watch_command().await;
         }
 
         None => {

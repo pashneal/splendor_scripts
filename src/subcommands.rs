@@ -7,6 +7,7 @@ use splendor_arena::ArenaBuilder;
 use std::fs;
 use std::path::Path;
 use std::time::Duration;
+use splendor_arena::tungstenite;
 
 /// Prints the version of the stourney binary
 pub fn version_command() {
@@ -80,13 +81,13 @@ pub fn show_competitors() {
     config::display_competitors();
 }
 
-/// Guides a user through running a competition
-pub async fn run_command() {
+/// Sets up the initial arena with configurable settings
+fn setup_arena() -> Result<ArenaBuilder, ()> {
     let cfg = config::get_config();
     if cfg.selected_projects.is_empty() {
         println!("No competitors selected yet!");
         println!("try running \n\tstourney config edit\nto add some competitors!");
-        return;
+        return Err(());
     }
 
     println!("[+] Running the tournament...");
@@ -107,7 +108,7 @@ pub async fn run_command() {
                 error!("[-] Unknown project type for {}", competitor);
                 error!("[-] Expected a Rust or Python project");
                 println!("[-] Exiting...");
-                return;
+                return Err(());
             }
         }
 
@@ -124,7 +125,6 @@ pub async fn run_command() {
 
         static_files = Some(utils::static_files_path(&competitor));
     }
-
     info!("Launching the arena...");
     trace!("Port: {}", port);
     trace!("Initial time: {:?}", initial_time);
@@ -139,9 +139,15 @@ pub async fn run_command() {
         .initial_time(initial_time)
         .increment(increment)
         .python_interpreter(&interpreter.unwrap())
-        .static_files(&static_files.unwrap())
-        .build();
-    arena.launch().await;
+        .static_files(&static_files.unwrap());
+    Ok(arena)
+}
+/// Guides a user through running a competition
+pub async fn run_command() {
+    if let Ok(arena) = setup_arena() {
+        let arena = arena.build();
+        arena.launch().await;
+    }
 }
 
 /// Attempts to update the stourney projects that exist in the recents list
@@ -152,5 +158,14 @@ pub fn update_command() {
     for project in projects {
         println!("[+] Updating project: {}...", project);
         utils::update_scaffolding(&project);
+    }
+}
+
+/// Guides a user through running (and watching) a competition
+pub async fn watch_command() {
+    if let Ok(arena) = setup_arena() {
+        let arena = arena.send_to_web(true, &config::get_config().api_key);
+        let arena = arena.build();
+        arena.launch().await;
     }
 }
