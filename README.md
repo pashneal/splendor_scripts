@@ -6,7 +6,7 @@ Currently tested on Windows and Linux systems!
 
 This script needs 
 - Rust (cargo) >= 1.50
-- Python >= 3.8
+- Python >= 3.9
 
 ## Coming Soon
 
