@@ -16,6 +16,9 @@ use serde::{Deserialize, Serialize};
 /// add new fields with default values, or to change the default, but
 /// not to remove fields, nor to change types as this complicates
 /// the migration process
+///
+/// To enforce clients to updating their local config file, update the `VERSION` constant
+/// so that the stourney binary automatically migrates the config file
 pub struct ProjectConfig {
     ///  The current version of the config file - must match `constants::VERSION`
     pub version: String,
