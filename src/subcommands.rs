@@ -17,9 +17,9 @@ pub fn version_command() {
 /// Guides a user through creating a new project in the specified directory
 pub fn new_command(directory: &str) {
     //TODO: Error handling for the expects
-
     println!("[+] Creating a new project...");
     trace!("[+] Launched the new subcommand");
+
     if !utils::prereqs_found() {
         println!("[-] Prerequisites not met, exiting...");
         return;
