@@ -17,7 +17,7 @@ This script needs
 - [x] Reintroduce visualization for games
 - [x] Improve build times by removing extraneous files and dependencies
 - [x] Add support for updating projects / checking for the latest version of stourney
-- [ ] Add replay logging and visualising
+- [x] Add replay logging and visualising
 
 ## Creating a new project
 
@@ -51,6 +51,15 @@ be sure to have set up the the competitors using the `config` commands!
 
 ```bash
 stourney run
+```
+
+## Running projects 
+
+To serve your projects to the web and see the games being played on stourney.com, run the following command,
+which will provide you with a link to your game
+
+```bash
+stourney watch
 ```
 
 ## Disclaimer
