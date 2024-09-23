@@ -44,7 +44,7 @@ To edit the configuration of a project, run the following command:
 stourney config edit
 ```
 
-## Running projects 
+## Running projects locally
 
 To run projects against each other, run the following command:
 be sure to have set up the the competitors using the `config` commands!
@@ -53,7 +53,7 @@ be sure to have set up the the competitors using the `config` commands!
 stourney run
 ```
 
-## Running projects 
+## Running projects globally
 
 To serve your projects to the web and see the games being played on stourney.com, run the following command,
 which will provide you with a link to your game
