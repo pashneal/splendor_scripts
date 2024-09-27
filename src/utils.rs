@@ -669,3 +669,36 @@ pub fn check_for_updates() {
         println!("WARNING: stourney is out of date! Run `cargo install stourney` to update!");
     }
 }
+
+
+pub fn spawn_clients(url : &str, port : u16, client_ids : &Vec<String>, binaries : &Vec<(Option<String>, String)>){
+    assert!(client_ids.len() == binaries.len());
+    let clients = client_ids.iter().zip(binaries.iter());
+
+    for (client_id, (py, binary)) in clients {
+        if py.is_some() { 
+            let interpreter = py.clone().unwrap();
+            let process = Command::new(interpreter)
+                .arg(binary)
+                .arg("--")
+                .arg("--url")
+                .arg(url)
+                .arg("--port")
+                .arg(port.to_string())
+                .arg("--client-id")
+                .arg(client_id)
+                .spawn();
+            process.expect("[-] Failed to launch python client");
+        } else {
+            let process = Command::new(binary)
+                .arg("--url")
+                .arg(url)
+                .arg("--port")
+                .arg(port.to_string())
+                .arg("--client-id")
+                .arg(client_id)
+                .spawn();
+            process.expect("[-] Failed to launch rust client");
+        }
+    }
+}

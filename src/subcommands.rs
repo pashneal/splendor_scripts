@@ -7,7 +7,6 @@ use splendor_arena::ArenaBuilder;
 use std::fs;
 use std::path::Path;
 use std::time::Duration;
-use splendor_arena::tungstenite;
 
 /// Prints the version of the stourney binary
 pub fn version_command() {
@@ -82,7 +81,7 @@ pub fn show_competitors() {
 }
 
 /// Sets up the initial arena with configurable settings
-fn setup_arena() -> Result<ArenaBuilder, ()> {
+fn setup_arena() -> Result<(ArenaBuilder, Vec<(Option<String>, String)>), ()> {
     let cfg = config::get_config();
     if cfg.selected_projects.is_empty() {
         println!("No competitors selected yet!");
@@ -96,7 +95,7 @@ fn setup_arena() -> Result<ArenaBuilder, ()> {
     let initial_time = Duration::from_secs(10);
     let increment = Duration::from_secs(1);
     let mut interpreter = None;
-    let mut static_files = None;
+    let num_players = cfg.selected_projects.len();
 
     for competitor in cfg.selected_projects {
         let project_type = utils::guess_project_type(&competitor);
@@ -115,38 +114,42 @@ fn setup_arena() -> Result<ArenaBuilder, ()> {
         match project_type {
             utils::ProjectType::Rust => {
                 utils::build_rust_project(&competitor);
-                binaries.push(utils::rust_binary_path(&competitor));
+                binaries.push((None, utils::rust_binary_path(&competitor)));
             }
             utils::ProjectType::Python => {
-                binaries.push(utils::python_binary_path(&competitor));
+                binaries.push((interpreter.clone(), utils::python_binary_path(&competitor)));
             }
             _ => {}
         }
-
-        static_files = Some(utils::static_files_path(&competitor));
     }
     info!("Launching the arena...");
     trace!("Port: {}", port);
     trace!("Initial time: {:?}", initial_time);
     trace!("Increment: {:?}", increment);
     trace!("Interpreter: {:?}", interpreter);
-    trace!("Static files: {:?}", static_files);
-    trace!("Binaries: {:?}", binaries);
 
     let arena = ArenaBuilder::new()
         .port(port)
-        .binaries(binaries)
+        .num_players(num_players)
         .initial_time(initial_time)
-        .increment(increment)
-        .python_interpreter(&interpreter.unwrap())
-        .static_files(&static_files.unwrap());
-    Ok(arena)
+        .increment(increment);
+    Ok((arena, binaries))
 }
+
 /// Guides a user through running a competition
 pub async fn run_command() {
-    if let Ok(arena) = setup_arena() {
+    if let Ok((arena, binaries)) = setup_arena() {
         let arena = arena.build();
-        arena.launch().await;
+        let clients = arena.allowed_clients().clone();
+        let clients = clients.iter().map(|x| x.0.to_string()).collect::<Vec<_>>();
+        let handle = arena.spawn();
+        utils::spawn_clients(
+            "ws://127.0.0.1",
+            3030,
+            &clients, 
+            &binaries
+        );
+        let _ = handle.await;
     }
 }
 
@@ -163,7 +166,7 @@ pub fn update_command() {
 
 /// Guides a user through running (and watching) a competition
 pub async fn watch_command() {
-    if let Ok(arena) = setup_arena() {
+    if let Ok((arena, _)) = setup_arena() {
         let arena = arena.send_to_web(true, &config::get_config().api_key);
         let arena = arena.build();
         arena.launch().await;
